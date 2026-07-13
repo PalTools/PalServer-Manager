@@ -79,7 +79,7 @@ export function startMonitor(
             instance.playerDb.updateActivePlayers(playersRes)
           }
         } catch (err: unknown) {
-          const e = err as any
+          const e = err as { cause?: { code?: string }; code?: string }
           if (e?.cause?.code === 'ECONNREFUSED' || e?.code === 'ECONNREFUSED') {
             // Silently ignore ECONNREFUSED while the server is still booting its REST API
           } else {
