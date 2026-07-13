@@ -81,15 +81,15 @@ export class PlayerDatabase {
       let changed = false
 
       // Mark known players as banned if they are in banlist
-      for (const p of this.players.values()) {
+      this.players.forEach((p) => {
         if (bannedUserIds.has(p.userId) && p.status !== 'banned') {
           p.status = 'banned'
           changed = true
         }
-      }
+      })
 
       // If there are banned users in banlist that we don't know about, we could add them as dummy entries
-      for (const bId of bannedUserIds) {
+      bannedUserIds.forEach((bId) => {
         if (!this.players.has(bId)) {
           this.players.set(bId, {
             userId: bId,
@@ -108,7 +108,7 @@ export class PlayerDatabase {
           })
           changed = true
         }
-      }
+      })
 
       if (changed) {
         this.save()
@@ -168,12 +168,12 @@ export class PlayerDatabase {
       }
     }
 
-    for (const p of this.players.values()) {
+    this.players.forEach((p) => {
       if (p.status === 'online' && !activeIds.has(p.userId)) {
         p.status = 'offline'
         changed = true
       }
-    }
+    })
 
     if (changed) {
       this.save()
@@ -189,6 +189,19 @@ export class PlayerDatabase {
     const p = this.players.get(userId)
     if (p) {
       p.status = status
+      this.save()
+    }
+  }
+
+  public markAllOffline(): void {
+    let changed = false
+    this.players.forEach((p) => {
+      if (p.status === 'online') {
+        p.status = 'offline'
+        changed = true
+      }
+    })
+    if (changed) {
       this.save()
     }
   }
