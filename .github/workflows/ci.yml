@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Format, lint, and type check
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    needs: quality
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer
+        run: npm run build:win
+
+      - name: Get version from package.json
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Publish Stable Release
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ env.version }}
+          name: PalServer-Manager v${{ env.version }}
+          body: |
+            ## 🎉 Stable Release: v${{ env.version }}
+
+            This is the official stable release for PalServer-Manager.
+
+            **Commit:** `${{ github.sha }}`
+          makeLatest: true
+          allowUpdates: true
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          artifacts: dist/*-setup.exe
+
+      - name: Publish Experimental Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: experimental
+          name: PalServer-Manager (Experimental Build)
+          body: |
+            ## 🧪 Experimental Build
+
+            This is an automatically generated build from the `dev` branch.
+            Expect bugs and frequent updates!
+
+            ### Recent Changes
+            ${{ github.event.head_commit.message }}
+
+            **Commit:** `${{ github.sha }}`
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          artifacts: dist/*-setup.exe

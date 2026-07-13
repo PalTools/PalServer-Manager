@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+out
+release
+build
+
+# Electron-builder output
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.blockmap
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+.agents/
+# Logs
+*.log*
+logs
+
+# Test / coverage
+coverage
+.vitest-cache
+
+# Editor / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+.agents
+# OS
+.DS_Store
+Thumbs.db
+
+# Lint / type-check caches
+.eslintcache
+*.tsbuildinfo
+
+# Local app data (if ever generated inside the repo during dev/testing)
+PalServer-Manager-data

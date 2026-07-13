@@ -1,0 +1,31 @@
+appId: com.paltools.palserver-manager
+productName: PalServer-Manager
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{plan.md,start_server.py.py,BG.png,icon.jpg,icon.webp}'
+asarUnpack:
+  - resources/**
+win:
+  executableName: PalServer-Manager
+  icon: resources/icon.ico
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: PalServer Manager
+  uninstallDisplayName: PalServer Manager
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  perMachine: false
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+npmRebuild: false
