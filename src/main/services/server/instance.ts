@@ -513,6 +513,7 @@ export class ServerInstance {
       this.pid = undefined
       if (this.state !== 'stopped') {
         this.state = 'stopped'
+        this.playerDb.markAllOffline()
         this.saveConfig()
         this.emitStatus()
         this._log?.('Server process exited.')
@@ -680,6 +681,7 @@ export class ServerInstance {
     this._childProcess = null
     this.pid = undefined
     this.state = 'stopped'
+    this.playerDb.markAllOffline()
     this.saveConfig()
     this.emitStatus()
     logFn('Server killed.')
