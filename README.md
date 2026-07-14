@@ -1,10 +1,10 @@
-# 🐾 PalServer-Manager
+# PalServer-Manager
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-informational?style=flat-square)
 ![Built with Electron](https://img.shields.io/badge/Electron-2B2E3A?style=flat-square&logo=electron&logoColor=9FEAF9)
 ![React 19](https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![License](https://img.shields.io/badge/license-Unlicensed-lightgrey?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-brightgreen?style=flat-square)
 
 A desktop application for installing, configuring, and monitoring local Palworld dedicated server instances.
 
