@@ -150,9 +150,9 @@ responsibility, not a CI gate, at present.
 
 ## 9. Where to look next
 
-| Question                                                      | See                            |
-| --------------------------------------------------------------- | -------------------------------- |
-| What does each file/service do, and what's the IPC contract?    | `docs/CODEBASE.md`             |
-| Is this ready to release?                                       | `docs/productionchecklist.md`  |
-| `npm run dev` fails right after install                         | `electron-dev-fix.md`          |
-| How do I contribute / branch / PR?                               | `CONTRIBUTING.md`              |
+| Question                                                     | See                           |
+| ------------------------------------------------------------ | ----------------------------- |
+| What does each file/service do, and what's the IPC contract? | `docs/CODEBASE.md`            |
+| Is this ready to release?                                    | `docs/productionchecklist.md` |
+| `npm run dev` fails right after install                      | `electron-dev-fix.md`         |
+| How do I contribute / branch / PR?                           | `CONTRIBUTING.md`             |

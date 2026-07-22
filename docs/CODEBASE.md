@@ -87,16 +87,16 @@ Server processes are started from `ServerInstance`. The control service retains 
 
 ## Development, validation, and release
 
-| Command                | Purpose                                                                 |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `npm run dev`           | Start the development application.                                     |
-| `npm run format:check`  | Verify Prettier formatting without changing files.                     |
-| `npm run lint`          | Run ESLint.                                                             |
-| `npm run typecheck`     | Type-check main/preload (`typecheck:node`) and renderer (`typecheck:web`) projects in sequence. |
-| `npm run test:all`      | Run the full Vitest suite with coverage.                                |
-| `npm run test:<area>`   | Run one feature area's tests only — see "Tests," below, for the list.  |
-| `npm run build`         | Type-check, then create the Electron/Vite production output.           |
-| `npm run build:win`     | Build and produce the Windows NSIS installer.                          |
+| Command                | Purpose                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Start the development application.                                                              |
+| `npm run format:check` | Verify Prettier formatting without changing files.                                              |
+| `npm run lint`         | Run ESLint.                                                                                     |
+| `npm run typecheck`    | Type-check main/preload (`typecheck:node`) and renderer (`typecheck:web`) projects in sequence. |
+| `npm run test:all`     | Run the full Vitest suite with coverage.                                                        |
+| `npm run test:<area>`  | Run one feature area's tests only — see "Tests," below, for the list.                           |
+| `npm run build`        | Type-check, then create the Electron/Vite production output.                                    |
+| `npm run build:win`    | Build and produce the Windows NSIS installer.                                                   |
 
 `.github/workflows/ci.yml` runs formatting, linting, type checking, and the full test suite on every push and pull request (the `quality` job). A Windows installer build and release publish only run on push to `main` or `dev`, gated on `quality` passing: pushes to `main` publish/update the Stable release (tag `v<version>` from `package.json`, failing the run if that version's release already exists), and pushes to `dev` publish/update the rolling `experimental` pre-release. See `docs/WORKFLOW.md` for the full branch and release workflow.
 
@@ -104,16 +104,16 @@ Server processes are started from `ServerInstance`. The control service retains 
 
 Vitest tests are organized by application concern under `tests/`, each area split into `unit/` and/or `integration/`:
 
-| Area                     | Folder                             | `npm run` script  |
-| ------------------------- | ------------------------------------ | ------------------- |
-| Server lifecycle          | `tests/server-lifecycle/`           | `test:lifecycle`   |
-| Instance management      | `tests/instance-management/`        | `test:instances`   |
-| Configuration             | `tests/configuration/`              | `test:config`      |
-| File management           | `tests/file-manager/`               | `test:files`       |
-| Player management         | `tests/player-management/`          | `test:players`     |
-| SteamCMD / templates      | `tests/steamcmd-and-templates/`     | `test:steamcmd`    |
-| Monitoring                | `tests/monitor-and-metrics/`        | `test:monitor`     |
-| IPC contracts              | `tests/ipc-contract/`               | `test:ipc`         |
+| Area                 | Folder                          | `npm run` script |
+| -------------------- | ------------------------------- | ---------------- |
+| Server lifecycle     | `tests/server-lifecycle/`       | `test:lifecycle` |
+| Instance management  | `tests/instance-management/`    | `test:instances` |
+| Configuration        | `tests/configuration/`          | `test:config`    |
+| File management      | `tests/file-manager/`           | `test:files`     |
+| Player management    | `tests/player-management/`      | `test:players`   |
+| SteamCMD / templates | `tests/steamcmd-and-templates/` | `test:steamcmd`  |
+| Monitoring           | `tests/monitor-and-metrics/`    | `test:monitor`   |
+| IPC contracts        | `tests/ipc-contract/`           | `test:ipc`       |
 
 Tests use isolated mocks and temporary directories (`os.tmpdir()`) where starting an actual dedicated server or touching real application data would be impractical.
 
