@@ -304,6 +304,7 @@ jobs:
           makeLatest: true
           allowUpdates: true
           replacesArtifacts: true
+          removeArtifacts: true
           artifactErrorsFailBuild: true
           artifacts: dist/*-setup.exe,dist/SHA256SUMS.txt
           generateReleaseNotes: true
