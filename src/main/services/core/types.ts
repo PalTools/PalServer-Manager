@@ -2,6 +2,7 @@ export interface InstanceSettings {
   publicLobby: boolean
   queryPort: number
   restApiUsername: string
+  autoUpdate: boolean
 }
 
 export interface InstanceConfig {

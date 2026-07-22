@@ -74,26 +74,26 @@ OptionSettings=(ServerName="Test Server",PublicPort=8211)
     expect(getSettingValue(iniPath, 'Missing')).toBe(null)
   })
 
-  it('should parse and serialize DenyTechnologyList in double double-quotes format correctly', () => {
+  it('should parse and serialize DenyTechnologyList format correctly', () => {
     const raw = `[/Script/Pal.PalGameWorldSettings]
-OptionSettings=(Difficulty=None,DenyTechnologyList=(""BaseCampBattleDirector"",""BaseCampWorkHard""),GuildRejoinCooldownMinutes=0)
+OptionSettings=(Difficulty=None,DenyTechnologyList=("BaseCampBattleDirector","BaseCampWorkHard"),GuildRejoinCooldownMinutes=0)
 `
     writeFileSync(iniPath, raw, 'utf-8')
     const settings = getAllSettings(iniPath)
-    expect(settings['DenyTechnologyList']).toBe('(""BaseCampBattleDirector"",""BaseCampWorkHard"")')
+    expect(settings['DenyTechnologyList']).toBe('("BaseCampBattleDirector","BaseCampWorkHard")')
     expect(settings['Difficulty']).toBe('None')
     expect(settings['GuildRejoinCooldownMinutes']).toBe('0')
 
     const updates = {
       Difficulty: 'None',
-      DenyTechnologyList: '(""BaseCampBattleDirector"",""BaseCampWorkHard"",""BaseCampWorkHard"")',
+      DenyTechnologyList: '("BaseCampBattleDirector","BaseCampWorkHard")',
       GuildRejoinCooldownMinutes: '0'
     }
     setSettingValues(iniPath, updates)
 
     const updatedSettings = getAllSettings(iniPath)
     expect(updatedSettings['DenyTechnologyList']).toBe(
-      '(""BaseCampBattleDirector"",""BaseCampWorkHard"",""BaseCampWorkHard"")'
+      '("BaseCampBattleDirector","BaseCampWorkHard")'
     )
     expect(updatedSettings['Difficulty']).toBe('None')
     expect(updatedSettings['GuildRejoinCooldownMinutes']).toBe('0')

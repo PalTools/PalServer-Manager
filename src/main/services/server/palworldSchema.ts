@@ -970,7 +970,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     category: 'General',
     requiresQuotes: false,
     description:
-      'Disable specific technologies. Specify Technology IDs . Example: DenyTechnologyList=(""PALBOX"", ""RepairBench""))',
+      'Disable specific technologies. Specify Technology IDs. Example: DenyTechnologyList=("PALBOX", "RepairBench")',
     hideInUI: false
   },
   {
@@ -1250,7 +1250,7 @@ export function smartFixSetting(
         .map((p) => p.replace(/"/g, '').trim())
         .filter(Boolean)
       if (parts.length === 0) return ''
-      return `(${parts.map((p) => `""${p}""`).join(',')})`
+      return `(${parts.map((p) => `"${p}"`).join(',')})`
     }
     case 'String':
     default:

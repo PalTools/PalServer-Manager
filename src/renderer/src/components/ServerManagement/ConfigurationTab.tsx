@@ -178,6 +178,7 @@ export default function ConfigurationTab({
   const [formName, setFormName] = useState(config.name)
   const [formQueryPort, setFormQueryPort] = useState(String(config.settings.queryPort))
   const [formPublicLobby, setFormPublicLobby] = useState(config.settings.publicLobby)
+  const [formAutoUpdate, setFormAutoUpdate] = useState(config.settings.autoUpdate ?? true)
 
   const [PalworldSettings, setPalworldSettings] = useState<
     Record<string, string | number | boolean>
@@ -201,20 +202,30 @@ export default function ConfigurationTab({
   ]
 
   useEffect(() => {
+    let cancel = false
     if (editorMode === 'file') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFileLoading(true)
       readFile(instanceId, selectedFile)
         .then((content) => {
-          setFileContent(content)
-          setFileDirty(false)
+          if (!cancel) {
+            setFileContent(content)
+            setFileDirty(false)
+          }
         })
         .catch((err) => {
-          console.error(err)
-          setFileContent('')
-          setFileDirty(false)
+          if (!cancel) {
+            console.error(err)
+            setFileContent('')
+            setFileDirty(false)
+          }
         })
-        .finally(() => setFileLoading(false))
+        .finally(() => {
+          if (!cancel) setFileLoading(false)
+        })
+    }
+    return () => {
+      cancel = true
     }
   }, [editorMode, selectedFile, instanceId])
 
@@ -235,6 +246,7 @@ export default function ConfigurationTab({
     if (formName !== config.name) return true
     if (formQueryPort !== String(config.settings.queryPort)) return true
     if (formPublicLobby !== config.settings.publicLobby) return true
+    if (formAutoUpdate !== (config.settings.autoUpdate ?? true)) return true
 
     const initialPalworldSettings = config.PalworldSettings || {}
     const currentKeys = Object.keys(PalworldSettings)
@@ -246,12 +258,13 @@ export default function ConfigurationTab({
       }
     }
     return false
-  }, [formName, formQueryPort, formPublicLobby, PalworldSettings, config])
+  }, [formName, formQueryPort, formPublicLobby, formAutoUpdate, PalworldSettings, config])
 
   const handleCancel = (): void => {
     setFormName(config.name)
     setFormQueryPort(String(config.settings.queryPort))
     setFormPublicLobby(config.settings.publicLobby)
+    setFormAutoUpdate(config.settings.autoUpdate ?? true)
     setPalworldSettings(config.PalworldSettings || {})
   }
 
@@ -265,7 +278,8 @@ export default function ConfigurationTab({
       settings: {
         publicLobby: formPublicLobby,
         queryPort: parseInt(formQueryPort) || 27015,
-        restApiUsername: 'admin'
+        restApiUsername: 'admin',
+        autoUpdate: formAutoUpdate
       },
       PalworldSettings: PalworldSettings
     })
@@ -359,6 +373,29 @@ export default function ConfigurationTab({
       )
     }
 
+    if (!searchQuery || matchSearch('Auto-Update on Boot') || matchSearch('Auto Update')) {
+      fields.push(
+        <div key="formAutoUpdate" className="form-group" style={{ margin: 0 }}>
+          <label className="form-label">
+            Auto-Update on Boot <InfoIcon />
+          </label>
+          <select
+            className="form-input"
+            value={formAutoUpdate ? 'True' : 'False'}
+            onChange={(e) => {
+              if (!isRunning) {
+                setFormAutoUpdate(e.target.value === 'True')
+              }
+            }}
+            disabled={isRunning}
+          >
+            <option value="True">True</option>
+            <option value="False">False</option>
+          </select>
+        </div>
+      )
+    }
+
     return fields
   }
 
@@ -424,6 +461,8 @@ export default function ConfigurationTab({
                       className="btn btn-ghost"
                       style={{ border: '1px solid rgba(255,255,255,0.2)' }}
                       onClick={() => {
+                        setFileLoading(true)
+                        setFileContent('')
                         setSelectedFile(f.path)
                         setEditorMode('file')
                       }}
@@ -448,6 +487,7 @@ export default function ConfigurationTab({
                     return
                 }
                 setEditorMode('list')
+                setFileContent('')
                 if (editorMode === 'form') handleCancel()
               }}
             >
@@ -621,10 +661,14 @@ export default function ConfigurationTab({
 
       {editorMode === 'file' && !fileLoading && (
         <FileEditorModal
+          key={`${instanceId}:${selectedFile}`}
           filename={selectedFile.split('/').pop() || ''}
           initialContent={fileContent}
           onSave={handleSaveFile}
-          onClose={() => setEditorMode('list')}
+          onClose={() => {
+            setEditorMode('list')
+            setFileContent('')
+          }}
           saving={fileLoading}
           readOnly={isRunning}
           warning={

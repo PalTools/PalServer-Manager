@@ -61,6 +61,27 @@ export function registerInstanceHandlers(
     }
   })
 
+  ipcMain.handle('instances:updateFiles', async (_event, id: string) => {
+    try {
+      const instance = manager.get(id)
+      const win = getMainWindow()
+      const logFn = getLogFn(id, win)
+      instance.setLogFn(logFn)
+      const emitStatus = (status: unknown): void => {
+        try {
+          win?.webContents.send('instance:status', status)
+        } catch {
+          void 0
+        }
+      }
+      instance.setOnStatusUpdate(emitStatus)
+      await instance.install(logFn)
+      return { success: true }
+    } catch (err: unknown) {
+      return { _ipcError: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
   ipcMain.handle('system:openFolder', (_event, folderPath: string) => {
     shell.openPath(folderPath)
   })
