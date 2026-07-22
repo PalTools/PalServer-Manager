@@ -3,18 +3,24 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: 22
+  FORCE_COLOR: '1'
 
 jobs:
-  quality:
-    name: Format, lint, type check, and test
-    runs-on: windows-latest
+  code-quality:
+    name: Format, lint, and type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -22,7 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
@@ -37,46 +43,10 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Test
-        run: npm run test:all
-
-  check-release-version:
-    name: Check release version is not already published
-    if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
+  test:
+    name: Test
     runs-on: windows-latest
-    needs: quality
-    permissions:
-      contents: read
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Get version from package.json
-        id: get-version
-        shell: bash
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Fail if this version's Stable tag already exists
-        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="v${{ steps.get-version.outputs.version }}"
-          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            echo "::error::Release $tag already exists. Bump the version in package.json before pushing to ${{ github.event.repository.default_branch }}."
-            exit 1
-          fi
-
-  build-windows:
-    name: Build Windows installer
-    runs-on: windows-latest
-    needs: check-release-version
-    if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
-    permissions:
-      contents: write
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -84,8 +54,45 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm run test:all
+
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    needs: [code-quality, test]
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev'))
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Cache Electron builder binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
 
       - name: Install dependencies
         run: npm ci
@@ -93,44 +100,220 @@ jobs:
       - name: Build Windows installer
         run: npm run build:win
 
+      - name: Generate SHA256 checksums
+        if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
+        shell: bash
+        run: |
+          cd dist
+          sha256sum *-setup.exe > SHA256SUMS.txt
+
+      - name: Generate CHANGELOG with git-cliff
+        if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --verbose --output CHANGELOG.md
+        id: git-cliff
+
+      - name: Upload installer artifact for PRs
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PalServer-Manager-Installer
+          path: dist/*-setup.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Comment on PR with build link
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- palserver-manager-build-comment -->';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `${marker}\n### 🧪 Windows installer built\n\nA build of this PR is ready: [download it from the workflow run](${runUrl}) (see the **Artifacts** section).`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Add build summary
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          {
+            echo "### 📦 Windows installer built"
+            echo ""
+            echo "Download it from the **Artifacts** section at the top of this run's summary page."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Get build metadata
+        if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
+        id: meta
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = require('./package.json');
+            const dep = (name) => {
+              const raw = (pkg.dependencies && pkg.dependencies[name]) || (pkg.devDependencies && pkg.devDependencies[name]) || 'unknown';
+              return raw.replace(/^[\^~]/, '');
+            };
+            const lines = [
+              'version=' + pkg.version,
+              'electron=' + dep('electron'),
+              'react=' + dep('react'),
+              'typescript=' + dep('typescript'),
+            ];
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, lines.join('\n') + '\n');
+          "
+
+      - name: Check version is not already published
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.meta.outputs.version }}"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists. Bump the version in package.json before pushing to ${{ github.event.repository.default_branch }}."
+            exit 1
+          fi
+
+      - name: Commit updated CHANGELOG.md on release
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): update CHANGELOG.md for v${{ steps.meta.outputs.version }} [skip ci]"
+            git push origin ${{ github.event.repository.default_branch }}
+          fi
+
       - name: Publish Stable Release
-        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ needs.check-release-version.outputs.version }}
+          tag: v${{ steps.meta.outputs.version }}
           commit: ${{ github.sha }}
-          name: PalServer-Manager v${{ needs.check-release-version.outputs.version }}
+          name: PalServer-Manager v${{ steps.meta.outputs.version }}
           body: |
-            ## 🎉 Stable Release: v${{ needs.check-release-version.outputs.version }}
+            # PalServer-Manager v${{ steps.meta.outputs.version }}
 
-            This is the official stable release for PalServer-Manager.
+            ![Platform](https://img.shields.io/badge/platform-Windows%20x64-informational?style=flat-square) ![Electron](https://img.shields.io/badge/Electron-${{ steps.meta.outputs.electron }}-2B2E3A?style=flat-square&logo=electron&logoColor=9FEAF9) ![React](https://img.shields.io/badge/React-${{ steps.meta.outputs.react }}-149ECA?style=flat-square&logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-${{ steps.meta.outputs.typescript }}-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
-            **Commit:** `${{ github.sha }}`
+            Official production release for PalServer-Manager.
+
+            > [!NOTE]
+            > Download the NSIS installer below (`palserver-manager-${{ steps.meta.outputs.version }}-setup.exe`) to install or update PalServer-Manager.
+
+            ### Key Features
+            - **Multi-Instance Management**: Install, update, and manage multiple Palworld dedicated servers from one interface.
+            - **Lifecycle Control**: Start, stop, force-kill, and auto-manage server processes with real-time status tracking.
+            - **INI Configuration Editor**: Edit `PalWorldSettings.ini` via guided form UI or raw text editor safely.
+            - **Live Monitoring & Player Database**: Track CPU/RAM usage, server FPS, player counts, kick/ban players, and broadcast announcements.
+            - **File Manager & Terminal**: Manage server instance files, view live logs, and execute direct RCON commands.
+
+            ### Changelog
+            ${{ steps.git-cliff.outputs.content }}
+
+            ### Build Metadata
+            - **Commit:** `${{ github.sha }}`
+            - **Target Platform:** Windows x64 (NSIS Installer)
+            - **Checksums:** Verified SHA-256 available in `SHA256SUMS.txt`
           makeLatest: true
           allowUpdates: false
           replacesArtifacts: true
           artifactErrorsFailBuild: true
-          artifacts: dist/*-setup.exe
+          artifacts: dist/*-setup.exe,dist/SHA256SUMS.txt
+          generateReleaseNotes: true
+
+      - name: Add release summary
+        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        run: |
+          {
+            echo "### 🚀 Published v${{ steps.meta.outputs.version }}"
+            echo ""
+            echo "[View the release](${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.meta.outputs.version }})"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Force update experimental tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f experimental ${{ github.sha }}
+          git push origin experimental --force
 
       - name: Publish Experimental Release
-        if: github.ref == 'refs/heads/dev'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: ncipollo/release-action@v1
         with:
           tag: experimental
           commit: ${{ github.sha }}
           name: PalServer-Manager (Experimental Build)
           body: |
-            ## 🧪 Experimental Build
+            # PalServer-Manager (Experimental Build)
 
-            This is an automatically generated build from the `dev` branch.
-            Expect bugs and frequent updates!
+            ![Platform](https://img.shields.io/badge/platform-Windows%20x64-informational?style=flat-square) ![Branch](https://img.shields.io/badge/branch-dev-orange?style=flat-square&logo=git&logoColor=white) ![Build](https://img.shields.io/badge/type-experimental-yellow?style=flat-square) ![Electron](https://img.shields.io/badge/Electron-${{ steps.meta.outputs.electron }}-2B2E3A?style=flat-square&logo=electron&logoColor=9FEAF9)
 
-            ### Recent Changes
+            Automated rolling pre-release generated from the active `dev` branch.
+
+            > [!IMPORTANT]
+            > This is an experimental preview build compiled automatically from the `dev` branch. It contains the latest features and bug fixes, but may contain unverified changes.
+
+            ### Recent Commit Message
             ${{ github.event.head_commit.message }}
 
-            **Commit:** `${{ github.sha }}`
+            ### Changelog Highlights
+            ${{ steps.git-cliff.outputs.content }}
+
+            ### Build Information
+            - **Commit SHA:** `${{ github.sha }}`
+            - **Source Branch:** `dev`
+            - **Target Platform:** Windows x64
+            - **Checksums:** Verified SHA-256 available in `SHA256SUMS.txt`
           prerelease: true
+          makeLatest: true
           allowUpdates: true
           replacesArtifacts: true
           artifactErrorsFailBuild: true
-          artifacts: dist/*-setup.exe
+          artifacts: dist/*-setup.exe,dist/SHA256SUMS.txt
+          generateReleaseNotes: true
+
+      - name: Add experimental release summary
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        shell: bash
+        run: |
+          {
+            echo "### 🧪 Updated experimental build"
+            echo ""
+            echo "[View the release](${{ github.server_url }}/${{ github.repository }}/releases/tag/experimental)"
+          } >> "$GITHUB_STEP_SUMMARY"
