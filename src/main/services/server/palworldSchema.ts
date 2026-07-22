@@ -10,6 +10,7 @@ export interface PalworldSettingSchema {
     | 'TrueFalse'
     | 'AlphaDash'
     | 'CrossplayPlatforms'
+    | 'DenyTechnologyList'
   defaultValue: string | number | boolean
   category: string
   requiresQuotes: boolean
@@ -964,7 +965,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
   {
     key: 'DenyTechnologyList',
     displayName: 'Deny Technology List',
-    type: 'String',
+    type: 'DenyTechnologyList',
     defaultValue: '',
     category: 'General',
     requiresQuotes: false,
@@ -1240,6 +1241,16 @@ export function smartFixSetting(
       const parts = clean.split(',').filter((p) => allowed.includes(p))
       if (parts.length === 0) return ''
       return `(${parts.join(',')})`
+    }
+    case 'DenyTechnologyList': {
+      const clean = strVal.replace(/[()\s]/g, '')
+      if (!clean) return ''
+      const parts = clean
+        .split(',')
+        .map((p) => p.replace(/"/g, '').trim())
+        .filter(Boolean)
+      if (parts.length === 0) return ''
+      return `(${parts.map((p) => `""${p}""`).join(',')})`
     }
     case 'String':
     default:

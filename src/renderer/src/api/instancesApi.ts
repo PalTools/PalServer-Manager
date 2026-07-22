@@ -13,6 +13,7 @@ export interface PalworldSettingSchema {
     | 'TrueFalse'
     | 'AlphaDash'
     | 'CrossplayPlatforms'
+    | 'DenyTechnologyList'
   defaultValue: string | number | boolean
   category: string
   requiresQuotes: boolean
