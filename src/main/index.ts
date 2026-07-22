@@ -10,6 +10,7 @@ import { registerControlHandlers, stopAllMonitors } from './ipcs/server/control'
 import { registerFsHandlers } from './ipcs/server/fs'
 import { registerTemplateHandlers } from './ipcs/engine/template'
 import { registerPlayerHandlers } from './ipcs/server/players'
+import { registerScheduleHandlers } from './ipcs/server/schedules'
 import { initLogger } from './services/system/logger'
 
 initLogger()
@@ -104,6 +105,7 @@ app.whenReady().then(() => {
   registerFsHandlers(instanceManager)
   registerTemplateHandlers(() => mainWindow)
   registerPlayerHandlers(instanceManager)
+  registerScheduleHandlers(instanceManager)
 
   createWindow()
 

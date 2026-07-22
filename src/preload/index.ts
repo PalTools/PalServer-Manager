@@ -54,6 +54,14 @@ const palServerManager = {
   unbanPlayer: (id: string, userId: string) => ipcRenderer.invoke('players:unban', id, userId),
   announce: (id: string, message: string) => ipcRenderer.invoke('players:announce', id, message),
 
+  listSchedules: (id: string) => ipcRenderer.invoke('instances:listSchedules', id),
+  saveSchedule: (id: string, schedule: unknown) =>
+    ipcRenderer.invoke('instances:saveSchedule', id, schedule),
+  deleteSchedule: (id: string, scheduleId: string) =>
+    ipcRenderer.invoke('instances:deleteSchedule', id, scheduleId),
+  runScheduleNow: (id: string, scheduleId: string) =>
+    ipcRenderer.invoke('instances:runScheduleNow', id, scheduleId),
+
   onInstanceStatus: (callback: (status: unknown) => void) => {
     const handler = (_event: unknown, status: unknown): void => callback(status)
     ipcRenderer.on('instance:status', handler)

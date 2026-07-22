@@ -104,3 +104,33 @@ export const STEAMCMD_URL = isLinux
 export const SERVER_EXE_NAME = isLinux
   ? 'PalServer-Linux-Shipping'
   : 'PalServer-Win64-Shipping-Cmd.exe'
+
+export type TaskActionType = 'send_command' | 'power_action' | 'backup'
+
+export interface ScheduleTask {
+  id: string
+  action: TaskActionType
+  payload: string
+  delaySeconds: number
+  continueOnFailure: boolean
+}
+
+export interface ScheduleHistory {
+  id: string
+  timestamp: string
+  triggerType: 'scheduled' | 'manual'
+  status: 'success' | 'partial' | 'failed'
+  logs: string[]
+}
+
+export interface Schedule {
+  id: string
+  name: string
+  cronExpression: string
+  isActive: boolean
+  onlyWhenOnline: boolean
+  lastRunAt?: string
+  nextRunAt?: string
+  tasks: ScheduleTask[]
+  history?: ScheduleHistory[]
+}

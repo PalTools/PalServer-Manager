@@ -20,6 +20,7 @@ import TerminalTab from '../components/ServerManagement/TerminalTab'
 import ConfigurationTab from '../components/ServerManagement/ConfigurationTab'
 import FileManagerTab from '../components/ServerManagement/FileManagerTab'
 import PlayerManagementTab from '../components/ServerManagement/PlayerManagementTab'
+import ScheduleManagerTab from '../components/ServerManagement/ScheduleManagerTab'
 import LogViewerTab from '../components/ServerManagement/LogViewerTab'
 import InstallScreen from '../components/Shared/InstallScreen'
 
@@ -291,6 +292,7 @@ export default function InstanceDetail({ instanceId, activeTab }: Props): React.
             onSave={handleSaveSettings}
           />
         )}
+        {activeTab === 'schedules' && <ScheduleManagerTab instanceId={instanceId} />}
         {activeTab === 'players' && (
           <PlayerManagementTab instanceId={instanceId} isRunning={isRunning} />
         )}
