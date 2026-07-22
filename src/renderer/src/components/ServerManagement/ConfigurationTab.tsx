@@ -53,10 +53,11 @@ const DenyTechnologyEditor = ({
 
   const selectedIds = useMemo(() => {
     if (!value) return new Set<string>()
+    const cleanValue = value.replace(/[()\s]/g, '')
     return new Set(
-      value
+      cleanValue
         .split(',')
-        .map((s) => s.trim().replace(/^"|"$/g, ''))
+        .map((s) => s.trim().replace(/"/g, ''))
         .filter(Boolean)
     )
   }, [value])
