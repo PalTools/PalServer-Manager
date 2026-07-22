@@ -1,6 +1,6 @@
 {
   "name": "palserver-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A simple desktop manager for running and maintaining multiple Palworld dedicated servers — install, configure, and control them all from one app.",
   "main": "./out/main/index.js",
   "author": "KJAyano",
