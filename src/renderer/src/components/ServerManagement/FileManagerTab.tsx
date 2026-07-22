@@ -73,7 +73,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
   const sortedFiles = useMemo(() => {
     const list = [...files]
     list.sort((a, b) => {
-      // Always directories first
       const dirDiff = (b.isDir ? 1 : 0) - (a.isDir ? 1 : 0)
       if (dirDiff !== 0) return dirDiff
 
@@ -95,15 +94,12 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
     return list
   }, [files, sortField, sortDirection])
 
-  // Editor Modal State
   const [editorFile, setEditorFile] = useState<string | null>(null)
   const [editorContent, setEditorContent] = useState<string>('')
   const [editorSaving, setEditorSaving] = useState<boolean>(false)
 
-  // Selection state
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  // Context Menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; file: FileEntry } | null>(
     null
   )
@@ -135,7 +131,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
       for (let i = 0; i < items.length; i++) {
         const item = items[i]
         if (item.kind === 'file') {
-          // Check if it's a directory
           const entry = item.webkitGetAsEntry?.()
           if (entry && entry.isDirectory) {
             hasFolderOrError = true
@@ -180,7 +175,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
         }
       }
 
-      // Check collisions
       const collisions = validFiles.filter((f) =>
         files.some((existing) => existing.name === f.name && !existing.isDir)
       )
@@ -213,7 +207,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
     return () => window.removeEventListener('click', handleClick)
   }, [])
 
-  // Dialogs
   const [dialog, setDialog] = useState<{
     isOpen: boolean
     title: string
@@ -292,11 +285,9 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
 
   const getFullPath = (name: string): string => (currentPath ? `${currentPath}/${name}` : name)
 
-  // === File Editing ===
   const handleFileClick = async (entry: FileEntry): Promise<void> => {
     const filename = entry.name.toLowerCase()
 
-    // Check extension
     const allowedExts = [
       '.ini',
       '.cfg',
@@ -400,8 +391,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
       setEditorSaving(false)
     }
   }
-
-  // === Advanced Operations ===
 
   const handleCreateFolder = (): void => {
     setInputDialog({
@@ -594,7 +583,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
           Drop files to upload
         </div>
       )}
-      {/* Action Bar */}
       <div
         style={{
           display: 'flex',
@@ -658,7 +646,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
           ))}
         </div>
 
-        {/* Top actions */}
         {selected.size > 0 ? (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
@@ -927,7 +914,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
         </div>
       )}
 
-      {/* Context Menu */}
       {contextMenu && (
         <div
           style={{
@@ -1022,7 +1008,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
         />
       )}
 
-      {/* Input Dialog for rename, mkdir, etc */}
       {inputDialog.isOpen && (
         <div className="modal-overlay" style={{ zIndex: 200 }}>
           <div
@@ -1114,7 +1099,6 @@ export default function FileManagerTab({ instanceId }: Props): React.JSX.Element
         </div>
       )}
 
-      {/* General Alert / Confirm Dialog */}
       {dialog.isOpen && (
         <div className="modal-overlay" style={{ zIndex: 200 }}>
           <div

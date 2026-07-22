@@ -1,7 +1,3 @@
-/**
- * ipc/instances.ts — IPC handlers for instance CRUD operations.
- */
-
 import { ipcMain, shell, BrowserWindow } from 'electron'
 import { InstanceManager } from '../../services/server/instanceManager'
 import { PALWORLD_SCHEMA } from '../../services/server/palworldSchema'
@@ -60,6 +56,27 @@ export function registerInstanceHandlers(
       const instance = manager.getInstance(id)
       if (!instance) throw new Error('Instance not found')
       return await instance.sendRconCommand(cmd)
+    } catch (err: unknown) {
+      return { _ipcError: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('instances:updateFiles', async (_event, id: string) => {
+    try {
+      const instance = manager.get(id)
+      const win = getMainWindow()
+      const logFn = getLogFn(id, win)
+      instance.setLogFn(logFn)
+      const emitStatus = (status: unknown): void => {
+        try {
+          win?.webContents.send('instance:status', status)
+        } catch {
+          void 0
+        }
+      }
+      instance.setOnStatusUpdate(emitStatus)
+      await instance.install(logFn)
+      return { success: true }
     } catch (err: unknown) {
       return { _ipcError: err instanceof Error ? err.message : String(err) }
     }

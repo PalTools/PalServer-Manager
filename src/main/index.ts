@@ -1,10 +1,3 @@
-/**
- * Main process entry point — PalServer-Manager
- *
- * Creates the Electron window, initializes the InstanceManager,
- * registers IPC handlers, and ensures clean shutdown.
- */
-
 import { app, shell, BrowserWindow, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -17,6 +10,7 @@ import { registerControlHandlers, stopAllMonitors } from './ipcs/server/control'
 import { registerFsHandlers } from './ipcs/server/fs'
 import { registerTemplateHandlers } from './ipcs/engine/template'
 import { registerPlayerHandlers } from './ipcs/server/players'
+import { registerScheduleHandlers } from './ipcs/server/schedules'
 import { initLogger } from './services/system/logger'
 
 initLogger()
@@ -60,7 +54,7 @@ function createWindow(): void {
         shell.openExternal(details.url)
       }
     } catch {
-      // Ignore malformed URLs
+      void 0
     }
     return { action: 'deny' }
   })
@@ -83,7 +77,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Set dynamic CSP: enforce strict rules only in production builds
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     if (app.isPackaged) {
       const csp =
@@ -102,18 +95,17 @@ app.whenReady().then(() => {
     }
   })
 
-  // Initialize backend
   const dataRoot = getDataRoot()
   initSteamCmd(dataRoot)
   instanceManager = new InstanceManager(dataRoot)
   instanceManager.loadRegistry()
 
-  // Register IPC
   registerInstanceHandlers(instanceManager, () => mainWindow)
   registerControlHandlers(instanceManager, () => mainWindow)
   registerFsHandlers(instanceManager)
   registerTemplateHandlers(() => mainWindow)
   registerPlayerHandlers(instanceManager)
+  registerScheduleHandlers(instanceManager)
 
   createWindow()
 
@@ -122,13 +114,12 @@ app.whenReady().then(() => {
   })
 })
 
-// ── Clean shutdown: stop all running instances before quit ──────
 app.on('before-quit', async (event) => {
   if (instanceManager) {
     event.preventDefault()
     stopAllMonitors()
     await instanceManager.stopAll()
-    instanceManager = null // Prevent re-entry
+    instanceManager = null
     app.quit()
   }
 })

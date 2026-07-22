@@ -8,7 +8,7 @@ import {
   mkdirSync,
   chmodSync
 } from 'fs'
-import { installOrUpdate } from './steamcmd'
+import { installOrUpdate, checkForUpdate } from './steamcmd'
 import { getDataRoot } from '../../ipcs/core/settings'
 import { isLinux, SERVER_EXE_NAME } from '../../services/core/types'
 
@@ -29,9 +29,6 @@ export class TemplateManager {
     return this.templateDir
   }
 
-  /**
-   * Fast integrity check of the entire template directory against the manifest.
-   */
   getTemplateStatus(): TemplateStatus {
     if (!existsSync(this.templateDir) || !existsSync(this.manifestPath)) {
       return 'not_installed'
@@ -41,7 +38,6 @@ export class TemplateManager {
       const manifestRaw = readFileSync(this.manifestPath, 'utf-8')
       const manifest: Record<string, number> = JSON.parse(manifestRaw)
 
-      // Check if all files in the manifest exist and match the size
       for (const [relPath, expectedSize] of Object.entries(manifest)) {
         const fullPath = join(this.templateDir, relPath)
         if (!existsSync(fullPath)) {
@@ -60,9 +56,6 @@ export class TemplateManager {
     }
   }
 
-  /**
-   * Generates a fast size-based integrity manifest for all files in the template.
-   */
   generateIntegrityManifest(): void {
     const manifest: Record<string, number> = {}
 
@@ -75,7 +68,6 @@ export class TemplateManager {
         if (stats.isDirectory()) {
           walk(fullPath)
         } else {
-          // Normalize to forward slashes for cross-platform manifest stability
           const relPath = relative(this.templateDir, fullPath).replace(/\\/g, '/')
           manifest[relPath] = stats.size
         }
@@ -86,9 +78,6 @@ export class TemplateManager {
     writeFileSync(this.manifestPath, JSON.stringify(manifest, null, 2), 'utf-8')
   }
 
-  /**
-   * Installs or repairs the template via SteamCMD, then generates the manifest.
-   */
   async installTemplate(
     log?: (msg: string) => void,
     onProgress?: (stage: string, percent: number) => void
@@ -115,7 +104,14 @@ export class TemplateManager {
     this.generateIntegrityManifest()
     log?.('Template integrity validated.')
   }
+
+  async checkForUpdate(log?: (msg: string) => void): Promise<{
+    needsUpdate: boolean
+    currentBuildId: string | null
+    remoteBuildId: string | null
+  }> {
+    return checkForUpdate(this.templateDir, log)
+  }
 }
 
-// Export a singleton
 export const templateManager = new TemplateManager()

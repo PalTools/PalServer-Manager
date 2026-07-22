@@ -1,10 +1,3 @@
-/**
- * backend/instanceManager.ts — Owns the collection of ServerInstances.
- *
- * Manages the registry.json index, creates/deletes instances, and
- * provides accessors. Also handles stopping all instances on app quit.
- */
-
 import { existsSync, readFileSync, mkdirSync, rmSync, promises as fsPromises } from 'fs'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
@@ -29,8 +22,6 @@ export class InstanceManager {
     mkdirSync(this.defaultInstanceRoot, { recursive: true })
   }
 
-  // ── Registry persistence ────────────────────────────────────────
-
   private get registryPath(): string {
     return join(this.dataRoot, 'registry.json')
   }
@@ -54,7 +45,6 @@ export class InstanceManager {
           try {
             const inst = ServerInstance.load(jsonPath)
             if (inst) {
-              // Reconcile state: check if actually running
               if (inst.state === 'running' || inst.state === 'starting') {
                 inst.state = inst.isRunning() ? 'running' : 'stopped'
                 inst.saveConfig()
@@ -89,18 +79,14 @@ export class InstanceManager {
     return this.saveQueue
   }
 
-  // ── CRUD ────────────────────────────────────────────────────────
-
   getInstance(id: string): ServerInstance | undefined {
     return this.instances.get(id)
   }
 
   async createInstance(input: CreateInstanceInput): Promise<ServerInstance> {
     const id = randomUUID()
-    // Determine install path using UUID for collision prevention and safety
     const installPath = input.installPath || join(this.defaultInstanceRoot, id)
 
-    // Allocate ports
     const usedPorts = collectUsedPorts(this.list())
     const publicPort =
       Number(input.PalworldSettings?.PublicPort) || (await allocatePort(8211, usedPorts))
@@ -108,7 +94,6 @@ export class InstanceManager {
     const queryPort = input.settings?.queryPort ?? (await allocatePort(27015, usedPorts))
     usedPorts.add(queryPort)
 
-    // Validate
     const rconPort =
       Number(input.PalworldSettings?.RCONPort) || (await allocatePort(25575, usedPorts))
     usedPorts.add(rconPort)
@@ -119,7 +104,6 @@ export class InstanceManager {
     const err = validatePortsUnique(this.list(), { queryPort, publicPort, rconPort, restPort })
     if (err) throw new Error(err)
 
-    // Complete the instance creation
     const instance = ServerInstance.create(input, installPath, queryPort, id)
     instance.PalworldSettings.PublicPort = publicPort
     instance.PalworldSettings.RCONEnabled = true
@@ -135,19 +119,15 @@ export class InstanceManager {
     }
 
     try {
-      // Create destination directory first if it doesn't exist
       mkdirSync(installPath, { recursive: true })
 
-      // Use child processes instead of fs.promises.cp to completely avoid blocking the Node event loop
       if (process.platform !== 'win32') {
-        // Linux/macOS
         await execFileAsync('cp', [
           '-a',
           `${templateManager.getTemplateDir()}/.`,
           `${installPath}/`
         ])
       } else {
-        // Windows: xcopy /E (recursive) /I (assume dest is dir) /H (hidden files) /Y (yes to overwrite) /Q (quiet)
         await execFileAsync(
           'xcopy',
           ['/E', '/I', '/H', '/Y', '/Q', templateManager.getTemplateDir(), installPath],
@@ -176,7 +156,6 @@ export class InstanceManager {
       throw new Error('Cannot delete an instance while it is installing or updating.')
     }
 
-    // Stop if running
     if (inst.isRunning()) {
       inst.kill()
     }
@@ -202,7 +181,6 @@ export class InstanceManager {
 
     if (patch.name !== undefined) inst.name = patch.name
 
-    // Update settings logic
     let newQueryPort = inst.settings.queryPort
     if (patch.settings?.queryPort) {
       newQueryPort = patch.settings.queryPort
@@ -256,9 +234,6 @@ export class InstanceManager {
     return Array.from(this.instances.values())
   }
 
-  // ── App lifecycle ───────────────────────────────────────────────
-
-  /** Stop every running instance. Called on app quit. */
   async stopAll(): Promise<void> {
     const running = this.list().filter((i) => i.isRunning())
     await Promise.all(running.map((i) => i.stop()))

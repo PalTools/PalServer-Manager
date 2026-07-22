@@ -20,14 +20,12 @@ export default function LogViewerTab({ instanceId }: LogViewerTabProps): React.J
       setError(null)
       const entries = await listDir(instanceId, 'Logs')
 
-      // Filter out directories and sort by mtime descending
       const files = entries
         .filter((e) => !e.isDir)
         .sort((a, b) => new Date(b.mtime).getTime() - new Date(a.mtime).getTime())
 
       setLogs(files)
 
-      // Auto-select the most recent log if none is selected
       if (files.length > 0 && !selectedLog) {
         setSelectedLog(files[0])
       }
@@ -111,7 +109,6 @@ export default function LogViewerTab({ instanceId }: LogViewerTabProps): React.J
         gap: '24px'
       }}
     >
-      {/* Left Column: File List */}
       <div
         className="panel"
         style={{
@@ -246,7 +243,6 @@ export default function LogViewerTab({ instanceId }: LogViewerTabProps): React.J
         )}
       </div>
 
-      {/* Right Column: File Content */}
       <div
         className="panel"
         style={{

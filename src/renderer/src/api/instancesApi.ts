@@ -1,7 +1,3 @@
-/**
- * api/instancesApi.ts — Typed wrapper over the preload-exposed IPC calls.
- */
-
 export interface PalworldSettingSchema {
   key: string
   displayName?: string
@@ -13,6 +9,7 @@ export interface PalworldSettingSchema {
     | 'TrueFalse'
     | 'AlphaDash'
     | 'CrossplayPlatforms'
+    | 'DenyTechnologyList'
   defaultValue: string | number | boolean
   category: string
   requiresQuotes: boolean
@@ -34,6 +31,7 @@ export interface InstanceSettings {
   publicLobby: boolean
   queryPort: number
   restApiUsername: string
+  autoUpdate: boolean
 }
 
 export interface RestApiConfig {
@@ -133,6 +131,11 @@ export async function deleteInstance(id: string, deleteFiles: boolean): Promise<
   if (res && res._ipcError) throw new Error(res._ipcError)
 }
 
+export async function updateInstanceFiles(id: string): Promise<void> {
+  const res = await window.electron.ipcRenderer.invoke('instances:updateFiles', id)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+}
+
 export async function sendRconCommand(id: string, cmd: string): Promise<string> {
   const res = await window.electron.ipcRenderer.invoke('instances:sendRcon', id, cmd)
   if (res && res._ipcError) throw new Error(res._ipcError)
@@ -177,8 +180,6 @@ export function onInstanceLog(callback: (id: string, msg: string) => void): () =
   return api.onInstanceLog(callback)
 }
 
-// ── File System ─────────────────────────────────────────────────
-
 export async function listDir(id: string, relPath: string): Promise<FileEntry[]> {
   return (await api.listDir(id, relPath)) as FileEntry[]
 }
@@ -217,4 +218,57 @@ export async function archive(id: string, relPaths: string[], archiveName: strin
 
 export async function unarchive(id: string, relPath: string): Promise<void> {
   await api.unarchive(id, relPath)
+}
+
+export type TaskActionType = 'send_command' | 'power_action' | 'backup'
+
+export interface ScheduleTask {
+  id: string
+  action: TaskActionType
+  payload: string
+  delaySeconds: number
+  continueOnFailure: boolean
+}
+
+export interface ScheduleHistory {
+  id: string
+  timestamp: string
+  triggerType: 'scheduled' | 'manual'
+  status: 'success' | 'partial' | 'failed'
+  logs: string[]
+}
+
+export interface Schedule {
+  id: string
+  name: string
+  cronExpression: string
+  isActive: boolean
+  onlyWhenOnline: boolean
+  lastRunAt?: string
+  nextRunAt?: string
+  tasks: ScheduleTask[]
+  history?: ScheduleHistory[]
+}
+
+export async function listSchedules(id: string): Promise<Schedule[]> {
+  const res = await window.electron.ipcRenderer.invoke('instances:listSchedules', id)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as Schedule[]
+}
+
+export async function saveSchedule(id: string, schedule: Partial<Schedule>): Promise<Schedule> {
+  const res = await window.electron.ipcRenderer.invoke('instances:saveSchedule', id, schedule)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as Schedule
+}
+
+export async function deleteSchedule(id: string, scheduleId: string): Promise<void> {
+  const res = await window.electron.ipcRenderer.invoke('instances:deleteSchedule', id, scheduleId)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+}
+
+export async function runScheduleNow(id: string, scheduleId: string): Promise<ScheduleHistory> {
+  const res = await window.electron.ipcRenderer.invoke('instances:runScheduleNow', id, scheduleId)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as ScheduleHistory
 }

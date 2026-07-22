@@ -8,7 +8,6 @@ vi.mock('../../../src/main/core/types', () => ({
   }
 }))
 
-// Need to mock child_process for execution, but since it's unit test, we can mock it entirely.
 vi.mock('child_process', () => ({
   exec: vi.fn(),
   execFile: vi.fn()
@@ -54,7 +53,6 @@ describe('processControl.ts - killProcessTree platform branching', () => {
 
     await killProcessTree(5678)
 
-    // Should be called twice: once for isProcessAlive(5678, 0) and once for -5678, SIGKILL
     expect(processKillMock).toHaveBeenCalledWith(-5678, 'SIGKILL')
   })
 })
@@ -74,7 +72,6 @@ describe('processControl.ts - findProcessIdByPath native-path matching', () => {
 
     const execMock = vi.mocked(cp.exec)
 
-    // Mock the wmic output. Node, ExecutablePath, ProcessId (csv)
     execMock.mockImplementation((...args: unknown[]) => {
       const cmd = args[0] as string
       const cb = args.find((a) => typeof a === 'function') as (
@@ -104,7 +101,6 @@ describe('processControl.ts - findProcessIdByPath native-path matching', () => {
     vi.spyOn(process, 'kill').mockImplementation(() => true)
     const execMock = vi.mocked(cp.exec)
 
-    // Mock wmic output from a sibling directory 'Instance2'
     execMock.mockImplementation((...args: unknown[]) => {
       const cmd = args[0] as string
       const cb = args.find((a) => typeof a === 'function') as (

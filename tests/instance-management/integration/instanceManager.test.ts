@@ -5,7 +5,6 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 
-// Mock template manager to avoid steamcmd installs
 vi.mock('../../../src/main/services/engine/templateManager', () => ({
   templateManager: {
     getTemplateStatus: () => 'ok',
@@ -41,13 +40,10 @@ describe('instance-management - Integration', () => {
     const regData = JSON.parse(readFileSync(join(tempRoot, 'registry.json'), 'utf-8'))
     expect(regData.instances.some((i: Record<string, unknown>) => i.id === inst.id)).toBe(true)
 
-    // Directory should exist
     expect(existsSync(inst.installPath)).toBe(true)
 
-    // Delete
     await manager.deleteInstance(inst.id, true)
 
-    // We must wait for the async save queue to flush before checking the registry
     await manager.saveRegistry()
 
     const regDataAfter = JSON.parse(readFileSync(join(tempRoot, 'registry.json'), 'utf-8'))
@@ -55,12 +51,10 @@ describe('instance-management - Integration', () => {
       false
     )
 
-    // Directory should NOT exist
     expect(existsSync(inst.installPath)).toBe(false)
   })
 
   it('should handle concurrent-write serialization queue under Promise.all', async () => {
-    // Fire many saves rapidly
     await Promise.all([
       manager.saveRegistry(),
       manager.saveRegistry(),
@@ -70,7 +64,6 @@ describe('instance-management - Integration', () => {
       manager.saveRegistry()
     ])
 
-    // If it didn't throw and crash, the queue worked.
     expect(existsSync(join(tempRoot, 'registry.json'))).toBe(true)
   })
 })

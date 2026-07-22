@@ -10,6 +10,7 @@ export interface PalworldSettingSchema {
     | 'TrueFalse'
     | 'AlphaDash'
     | 'CrossplayPlatforms'
+    | 'DenyTechnologyList'
   defaultValue: string | number | boolean
   category: string
   requiresQuotes: boolean
@@ -234,7 +235,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Build Object HP Rate',
     type: 'Floating',
     defaultValue: 1.0,
-    category: 'Rates & Multipliers',
+    category: 'Building & World',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -243,7 +244,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Build Object Damage Rate',
     type: 'Floating',
     defaultValue: 1.0,
-    category: 'Rates & Multipliers',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Damage multiplier to buildings.',
     hideInUI: false
@@ -253,7 +254,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Build Object Deterioration Damage Rate',
     type: 'Floating',
     defaultValue: 1.0,
-    category: 'Rates & Multipliers',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Building decay speed multiplier.',
     hideInUI: false
@@ -303,7 +304,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Death Penalty',
     type: 'String',
     defaultValue: 'Item',
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description:
       'Death Penalty None : No drops, Item : Drop all items except equipment, ItemAndEquipment : Drop all items, All : Drop all items and all Pals on team',
@@ -323,7 +324,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable Friendly Fire',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -332,7 +333,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable Invader Enemy',
     type: 'TrueFalse',
     defaultValue: true,
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description: 'Enable Invader',
     hideInUI: false
@@ -369,7 +370,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Drop Item Max Number',
     type: 'Numeric',
     defaultValue: 3000,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -378,7 +379,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Physics Active Drop Item Max Num',
     type: 'NumericSigned',
     defaultValue: -1,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Maximum number of dropped items that can use physics behavior.',
     hideInUI: false
@@ -388,7 +389,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Drop Item Max Number UNKO',
     type: 'Numeric',
     defaultValue: 100,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -397,7 +398,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Base Camp Max Number',
     type: 'Numeric',
     defaultValue: 128,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Total number of bases across the server.',
     hideInUI: false
@@ -407,7 +408,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Base Camp Worker Max Number',
     type: 'Numeric',
     defaultValue: 15,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description:
       'Maximum number of Pals per base (max 50). Increasing this value raises processing load.',
@@ -418,7 +419,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Drop Item Alive Max Hours',
     type: 'Floating',
     defaultValue: 1.0,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -458,7 +459,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Base Camp Max Number In Guild',
     type: 'Numeric',
     defaultValue: 4,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description:
       'Maximum number of bases per guild. Default: 4 (max 10). Increasing this value raises processing load.',
@@ -507,7 +508,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Is PvP',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description: 'EnablePvP',
     hideInUI: false
@@ -547,7 +548,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Can Pickup Other Guild Death Penalty Drop',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'World & Building',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -575,7 +576,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable Fast Travel Only Base Camp',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Restrict fast travel to between bases only.',
     hideInUI: false
@@ -606,7 +607,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable Defense Other Guild Player',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'Player & Pal Stats',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -615,7 +616,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Invisible Other Guild Base Camp Area',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Show base area boundaries.',
     hideInUI: false
@@ -625,7 +626,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Build Area Limit',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Prevent building near structures such as fast-travel points.',
     hideInUI: false
@@ -664,7 +665,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Server Name',
     type: 'String',
     defaultValue: 'Palworld Server Hosted By PalTools/PalServer-Manager',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     description: 'Server name',
     hideInUI: false
@@ -674,7 +675,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Server Description',
     type: 'String',
     defaultValue: 'Palworld Server Hosted By PalTools/PalServer-Manager',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     description: 'Server description',
     hideInUI: false
@@ -684,7 +685,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Admin Password',
     type: 'AlphaDash',
     defaultValue: 'ChangeItToUniquePassword',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     description: 'Password used to obtain administrative privileges on the server.',
     hideInUI: false
@@ -694,7 +695,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Server Password',
     type: 'AlphaDash',
     defaultValue: '',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     description: 'Password required to log in to the server.',
     hideInUI: false
@@ -714,7 +715,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Public Port',
     type: 'Numeric',
     defaultValue: 8211,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     description:
       '(Community server) Explicitly specify the external public port. (Does not change the server’s listening port.)',
@@ -725,7 +726,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Public IP',
     type: 'String',
     defaultValue: '',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     description: '(Community server) Explicitly specify the external public IP.',
     hideInUI: false
@@ -735,7 +736,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable RCON',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -744,7 +745,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'RCON Port',
     type: 'Numeric',
     defaultValue: 25575,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -753,7 +754,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Server Region',
     type: 'String',
     defaultValue: '',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -762,7 +763,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Use Auth',
     type: 'TrueFalse',
     defaultValue: true,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -771,7 +772,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Ban List URL',
     type: 'String',
     defaultValue: 'https://b.palworldgame.com/api/banlist.txt',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: true,
     hideInUI: false
   },
@@ -780,7 +781,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Enable RESTAPI',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -789,7 +790,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'RESTAPI Port',
     type: 'Numeric',
     defaultValue: 8212,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -808,7 +809,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Chat Post Limit Per Minute',
     type: 'Numeric',
     defaultValue: 128,
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     description: 'Maximum number of chat messages allowed per minute.',
     hideInUI: false
@@ -818,7 +819,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Crossplay Platforms',
     type: 'CrossplayPlatforms',
     defaultValue: '(Steam,Xbox,PS5,Mac)',
-    category: 'General',
+    category: 'Network & Security',
     requiresQuotes: false,
     description: 'Allowed platform to connect the server. Default: (Steam,Xbox,PS5,Mac)',
     hideInUI: false
@@ -858,7 +859,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Supply Drop Span',
     type: 'Numeric',
     defaultValue: 180,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Meteorite / supply drop interval (minutes).',
     hideInUI: false
@@ -877,7 +878,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Max Building Limit Number',
     type: 'Numeric',
     defaultValue: 0,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Per-player building count cap (0 = unlimited).',
     hideInUI: false
@@ -927,7 +928,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Item Container Force Mark Dirty Interval',
     type: 'Floating',
     defaultValue: 1.0,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'How often to force re-sync while a container UI is open (seconds).',
     hideInUI: false
@@ -964,12 +965,12 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
   {
     key: 'DenyTechnologyList',
     displayName: 'Deny Technology List',
-    type: 'String',
+    type: 'DenyTechnologyList',
     defaultValue: '',
     category: 'General',
     requiresQuotes: false,
     description:
-      'Disable specific technologies. Specify Technology IDs . Example: DenyTechnologyList=(""PALBOX"", ""RepairBench""))',
+      'Disable specific technologies. Specify Technology IDs. Example: DenyTechnologyList=("PALBOX", "RepairBench")',
     hideInUI: false
   },
   {
@@ -977,7 +978,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Guild Rejoin Cooldown Minutes',
     type: 'Numeric',
     defaultValue: 0,
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description: 'Guild rejoin cooldown (minutes).',
     hideInUI: false
@@ -1005,7 +1006,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Max Guilds Per Frame',
     type: 'Numeric',
     defaultValue: 10,
-    category: 'PvP & Guild',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     hideInUI: false
   },
@@ -1045,7 +1046,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Display PvP Item Num On World Map Base Camp',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'World & Building',
+    category: 'Building & World',
     requiresQuotes: false,
     description: 'Whether to show, on the map, the number of PvP-exclusive items in each base.',
     hideInUI: false
@@ -1066,7 +1067,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Additional Drop Item When Player Killing In PvP Mode',
     type: 'String',
     defaultValue: 'PlayerDropItem',
-    category: 'Player & Pal Stats',
+    category: 'Guilds & PvP',
     requiresQuotes: true,
     description:
       'When bAdditionalDropItemWhenPlayerKillingInPvPMode is enabled, the ID of the item to drop.',
@@ -1077,7 +1078,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Additional Drop Item Num When Player Killing In PvP Mode',
     type: 'Numeric',
     defaultValue: 1,
-    category: 'Player & Pal Stats',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description:
       'When bAdditionalDropItemWhenPlayerKillingInPvPMode is enabled, the quantity of the item to drop.',
@@ -1088,7 +1089,7 @@ export const PALWORLD_SCHEMA: PalworldSettingSchema[] = [
     displayName: 'Additional Drop Item When Player Killing In PvP Mode Enabled',
     type: 'TrueFalse',
     defaultValue: false,
-    category: 'Player & Pal Stats',
+    category: 'Guilds & PvP',
     requiresQuotes: false,
     description: 'Whether to drop a special item when a player is killed while PvP is enabled.',
     hideInUI: false
@@ -1240,6 +1241,16 @@ export function smartFixSetting(
       const parts = clean.split(',').filter((p) => allowed.includes(p))
       if (parts.length === 0) return ''
       return `(${parts.join(',')})`
+    }
+    case 'DenyTechnologyList': {
+      const clean = strVal.replace(/[()\s]/g, '')
+      if (!clean) return ''
+      const parts = clean
+        .split(',')
+        .map((p) => p.replace(/"/g, '').trim())
+        .filter(Boolean)
+      if (parts.length === 0) return ''
+      return `(${parts.map((p) => `"${p}"`).join(',')})`
     }
     case 'String':
     default:

@@ -27,12 +27,26 @@ interface PalServerManagerAPI {
   onInstanceStatus: (callback: (status: unknown) => void) => () => void
   onInstanceLog: (callback: (id: string, msg: string) => void) => () => void
 
-  // Players
+  getTemplateStatus: () => Promise<unknown>
+  installTemplate: () => Promise<{ success: boolean; error?: string }>
+  checkTemplateUpdate: () => Promise<{
+    needsUpdate: boolean
+    currentBuildId: string | null
+    remoteBuildId: string | null
+    error?: string
+  }>
+  updateInstanceFiles: (id: string) => Promise<unknown>
+
   getPlayers: (id: string) => Promise<unknown[]>
   kickPlayer: (id: string, userId: string, message: string) => Promise<void>
   banPlayer: (id: string, userId: string, message: string) => Promise<void>
   unbanPlayer: (id: string, userId: string) => Promise<void>
   announce: (id: string, message: string) => Promise<void>
+
+  listSchedules: (id: string) => Promise<unknown[]>
+  saveSchedule: (id: string, schedule: unknown) => Promise<unknown>
+  deleteSchedule: (id: string, scheduleId: string) => Promise<void>
+  runScheduleNow: (id: string, scheduleId: string) => Promise<unknown>
 }
 
 declare global {

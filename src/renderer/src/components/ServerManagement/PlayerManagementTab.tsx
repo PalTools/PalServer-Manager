@@ -82,7 +82,6 @@ export default function PlayerManagementTab({ instanceId, isRunning }: Props): R
     return sortDirection === 'asc' ? ' ↑' : ' ↓'
   }
 
-  // Modals
   const [confirmAction, setConfirmAction] = useState<{
     type: 'kick' | 'ban' | 'unban'
     userId: string
@@ -210,7 +209,6 @@ export default function PlayerManagementTab({ instanceId, isRunning }: Props): R
 
   return (
     <div className="tab-pane active full-height" style={{ padding: '24px', gap: '24px' }}>
-      {/* Top Tab Switcher and Search */}
       <div
         style={{
           display: 'flex',
@@ -263,7 +261,6 @@ export default function PlayerManagementTab({ instanceId, isRunning }: Props): R
 
       {activeTab === 'players' && (
         <>
-          {/* Broadcast Panel */}
           <div className="panel" style={{ padding: '20px', borderRadius: '12px' }}>
             <div style={{ display: 'flex', gap: '12px' }}>
               <input
@@ -285,7 +282,6 @@ export default function PlayerManagementTab({ instanceId, isRunning }: Props): R
             </div>
           </div>
 
-          {/* Active Players Panel */}
           <div
             className="panel"
             style={{
@@ -747,7 +743,6 @@ export default function PlayerManagementTab({ instanceId, isRunning }: Props): R
         </div>
       )}
 
-      {/* Context Menu */}
       {contextMenu && (
         <div
           style={{

@@ -1,10 +1,5 @@
-/**
- * backend/ports.ts — Cross-instance port allocation and validation.
- */
-
 import { createSocket } from 'dgram'
 
-/** Check if a UDP port is free on 0.0.0.0. */
 export function isPortFree(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const sock = createSocket('udp4')
@@ -19,9 +14,6 @@ export function isPortFree(port: number): Promise<boolean> {
   })
 }
 
-/**
- * Find the next free UDP port starting from `startPort`, skipping any in `usedPorts`.
- */
 export async function allocatePort(startPort: number, usedPorts: Set<number>): Promise<number> {
   let port = startPort
   while (port < 65535) {
@@ -33,10 +25,6 @@ export async function allocatePort(startPort: number, usedPorts: Set<number>): P
   throw new Error(`No free port found starting from ${startPort}`)
 }
 
-/**
- * Collect every port already claimed by existing instances.
- * Pass the result to `allocatePort` to avoid collisions.
- */
 export function collectUsedPorts(
   instances: Array<{ PalworldSettings: Record<string, unknown>; settings: { queryPort: number } }>
 ): Set<number> {
@@ -50,10 +38,6 @@ export function collectUsedPorts(
   return used
 }
 
-/**
- * Validate that a proposed port set does not collide with any existing instance.
- * Returns an error message string if invalid, or null if OK.
- */
 export function validatePortsUnique(
   existingInstances: Array<{
     id: string

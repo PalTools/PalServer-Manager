@@ -1,15 +1,6 @@
-/**
- * backend/iniConfig.ts — Read/write PalWorldSettings.ini and GameUserSettings.ini
- *
- * Accepts arbitrary file paths so each instance can point at its own configs.
- */
-
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { dirname } from 'path'
+import { dirname, join } from 'path'
 
-/**
- * Robustly parses the comma-separated OptionSettings string, respecting quotes and parentheses.
- */
 function parseOptionString(optionString: string): Map<string, string> {
   const map = new Map<string, string>()
   let currentKey = ''
@@ -48,16 +39,80 @@ function parseOptionString(optionString: string): Map<string, string> {
   return map
 }
 
+function getDefaultTemplateLines(filePath: string): string[] {
+  const palDir = dirname(dirname(dirname(dirname(filePath))))
+  const serverDir = dirname(palDir)
+  const defaultTemplate1 = join(serverDir, 'DefaultPalWorldSettings.ini')
+  const defaultTemplate2 = join(palDir, 'DefaultPalWorldSettings.ini')
+  let templatePath = ''
+  if (existsSync(defaultTemplate1)) {
+    templatePath = defaultTemplate1
+  } else if (existsSync(defaultTemplate2)) {
+    templatePath = defaultTemplate2
+  }
+
+  if (!templatePath) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { app } = require('electron')
+      if (process.resourcesPath) {
+        const p = join(process.resourcesPath, 'DefaultPalWorldSettings.ini')
+        if (existsSync(p)) templatePath = p
+      }
+      if (!templatePath && app) {
+        const p = join(app.getAppPath(), 'resources', 'DefaultPalWorldSettings.ini')
+        if (existsSync(p)) templatePath = p
+      }
+    } catch {
+      void 0
+    }
+  }
+
+  if (!templatePath) {
+    const cwdResource = join(process.cwd(), 'resources', 'DefaultPalWorldSettings.ini')
+    if (existsSync(cwdResource)) {
+      templatePath = cwdResource
+    }
+  }
+
+  if (!templatePath) {
+    const relativeResource = join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'resources',
+      'DefaultPalWorldSettings.ini'
+    )
+    if (existsSync(relativeResource)) {
+      templatePath = relativeResource
+    }
+  }
+
+  if (templatePath && existsSync(templatePath)) {
+    return readFileSync(templatePath, 'utf-8').split(/\r?\n/)
+  }
+
+  return []
+}
+
+function getIniLines(filePath: string): string[] {
+  if (existsSync(filePath)) {
+    const content = readFileSync(filePath, 'utf-8')
+    if (content.trim().length > 0) {
+      return content.split(/\r?\n/)
+    }
+  }
+  return getDefaultTemplateLines(filePath)
+}
+
 export function setSettingValues(
   filePath: string,
   updates: Record<string, string | null | undefined>
 ): void {
   mkdirSync(dirname(filePath), { recursive: true })
 
-  let lines: string[] = []
-  if (existsSync(filePath)) {
-    lines = readFileSync(filePath, 'utf-8').split(/\r?\n/)
-  }
+  const lines = getIniLines(filePath)
 
   let sectionIdx = -1
   let optionIdx = -1
@@ -89,10 +144,10 @@ export function setSettingValues(
   const settingsMap = parseOptionString(optionString)
 
   for (const [k, v] of Object.entries(updates)) {
-    if (v === null || v === undefined || v === '') {
+    if (v === null || v === undefined) {
       settingsMap.delete(k)
     } else {
-      settingsMap.set(k, v)
+      settingsMap.set(k, String(v))
     }
   }
 
@@ -105,14 +160,10 @@ export function setSettingValues(
   writeFileSync(filePath, lines.join('\n'), 'utf-8')
 }
 
-/**
- * Parse a value from PalWorldSettings.ini's OptionSettings=(...) block.
- * Mirrors the reference script's `get_setting_value`.
- */
 export function getSettingValue(filePath: string, keyword: string): string | null {
-  if (!existsSync(filePath)) return null
+  const lines = getIniLines(filePath)
+  if (lines.length === 0) return null
 
-  const lines = readFileSync(filePath, 'utf-8').split('\n')
   let optionLine: string | null = null
   let inSection = false
 
@@ -128,29 +179,23 @@ export function getSettingValue(filePath: string, keyword: string): string | nul
 
   if (!optionLine) return null
 
-  // Strip outer parens
   if (optionLine.startsWith('(') && optionLine.endsWith(')')) {
     optionLine = optionLine.slice(1, -1)
   }
 
-  // Parse comma-separated key=value pairs, respecting quoted strings
   const settingsMap = parseOptionString(optionLine)
   const val = settingsMap.get(keyword)
   if (val !== undefined) {
-    // Strip surrounding quotes
     return val.replace(/^["']|["']$/g, '')
   }
 
   return null
 }
 
-/**
- * Parses all values from PalWorldSettings.ini's OptionSettings=(...) block.
- */
 export function getAllSettings(filePath: string): Record<string, string> {
-  if (!existsSync(filePath)) return {}
+  const lines = getIniLines(filePath)
+  if (lines.length === 0) return {}
 
-  const lines = readFileSync(filePath, 'utf-8').split(/\r?\n/)
   let optionLine: string | null = null
   let inSection = false
 
@@ -174,17 +219,12 @@ export function getAllSettings(filePath: string): Record<string, string> {
   const result: Record<string, string> = {}
 
   for (const [k, v] of settingsMap.entries()) {
-    // Strip surrounding quotes
     result[k] = v.replace(/^["']|["']$/g, '')
   }
 
   return result
 }
 
-/**
- * Parse `DedicatedServerName` from GameUserSettings.ini.
- * Mirrors the reference script's `get_dedicated_name`.
- */
 export function getDedicatedName(filePath: string): string {
   if (!existsSync(filePath)) return ''
   const lines = readFileSync(filePath, 'utf-8').split('\n')

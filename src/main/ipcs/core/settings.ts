@@ -1,7 +1,3 @@
-/**
- * settings.ts — App-level settings (data root, default instance location).
- */
-
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
@@ -26,7 +22,7 @@ export function getSettings(): AppSettings {
       cachedSettings = JSON.parse(readFileSync(settingsPath, 'utf-8'))
       return cachedSettings!
     } catch {
-      // Fall through to defaults
+      void 0
     }
   }
 

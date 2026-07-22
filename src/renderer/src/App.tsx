@@ -1,7 +1,18 @@
 import { useState, useEffect } from 'react'
 import InstanceList from './pages/InstanceList'
 import InstanceDetail from './pages/InstanceDetail'
-import { listInstances, InstanceConfig } from './api/instancesApi'
+import {
+  listInstances,
+  InstanceConfig,
+  updateInstanceFiles,
+  onInstanceStatus
+} from './api/instancesApi'
+import {
+  getTemplateStatus,
+  checkTemplateUpdate,
+  installTemplate,
+  onTemplateProgress
+} from './api/templateApi'
 import bgImage from './assets/bg.png'
 import iconImage from './assets/icon.png'
 import {
@@ -11,10 +22,12 @@ import {
   IconFolder,
   IconServer,
   IconArrowLeft,
-  IconFile
+  IconFile,
+  IconClock
 } from './components/Shared/Icons'
 
 import { TemplateEngineModal } from './components/TemplateEngine/TemplateEngineModal'
+import StartupUpdateModal from './components/Shared/StartupUpdateModal'
 
 type View = { type: 'list' } | { type: 'detail'; id: string; tab: string }
 
@@ -22,6 +35,20 @@ function App(): React.JSX.Element {
   const [view, setView] = useState<View>({ type: 'list' })
   const [instances, setInstances] = useState<InstanceConfig[]>([])
   const [globalAlert, setGlobalAlert] = useState<string | null>(null)
+
+  const [updateModalOpen, setUpdateModalOpen] = useState(false)
+  const [remoteBuildId, setRemoteBuildId] = useState<string | null>(null)
+  const [currentBuildId, setCurrentBuildId] = useState<string | null>(null)
+  const [templateUpdating, setTemplateUpdating] = useState(false)
+  const [templateProgress, setTemplateProgress] = useState<{
+    stage: string
+    percentage: number
+  } | null>(null)
+  const [templateError, setTemplateError] = useState<string | null>(null)
+  const [updatingInstances, setUpdatingInstances] = useState<
+    Record<string, { stage: string; percentage: number }>
+  >({})
+  const [isUpdatingBatch, setIsUpdatingBatch] = useState(false)
 
   useEffect(() => {
     window.alert = (msg: unknown) => {
@@ -41,19 +68,108 @@ function App(): React.JSX.Element {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    let unmount = false
+    const checkUpdatesOnBoot = async (): Promise<void> => {
+      try {
+        const status = await getTemplateStatus()
+        if (status !== 'ok') return
+
+        const res = await checkTemplateUpdate()
+        if (unmount || !res.needsUpdate) return
+
+        setRemoteBuildId(res.remoteBuildId)
+        setCurrentBuildId(res.currentBuildId)
+        setUpdateModalOpen(true)
+
+        setTemplateUpdating(true)
+        setTemplateProgress({ stage: 'Starting update...', percentage: 0 })
+
+        const removeListener = onTemplateProgress((data) => {
+          setTemplateProgress(data)
+        })
+
+        const installRes = await installTemplate()
+        removeListener()
+        setTemplateUpdating(false)
+
+        if (!installRes.success) {
+          setTemplateError(installRes.error || 'Failed to update template')
+        }
+      } catch (err) {
+        console.error('Boot update check error:', err)
+        setTemplateUpdating(false)
+      }
+    }
+
+    checkUpdatesOnBoot()
+    return () => {
+      unmount = true
+    }
+  }, [])
+
+  const handleUpdateSelectedInstances = async (selectedIds: string[]): Promise<void> => {
+    setIsUpdatingBatch(true)
+
+    const removeStatusListener = onInstanceStatus((status) => {
+      if (status.id && status.installProgress) {
+        setUpdatingInstances((prev) => ({
+          ...prev,
+          [status.id]: status.installProgress!
+        }))
+      }
+    })
+
+    try {
+      for (const id of selectedIds) {
+        setUpdatingInstances((prev) => ({
+          ...prev,
+          [id]: { stage: 'Starting update...', percentage: 0 }
+        }))
+        try {
+          await updateInstanceFiles(id)
+          setUpdatingInstances((prev) => ({
+            ...prev,
+            [id]: { stage: 'Update Complete', percentage: 100 }
+          }))
+        } catch (e) {
+          setUpdatingInstances((prev) => ({
+            ...prev,
+            [id]: { stage: `Failed: ${e instanceof Error ? e.message : String(e)}`, percentage: 0 }
+          }))
+        }
+      }
+    } finally {
+      removeStatusListener()
+      setIsUpdatingBatch(false)
+      refresh()
+    }
+  }
+
   const activeInstanceName =
     view.type === 'detail' ? instances.find((i) => i.id === view.id)?.name || 'Loading...' : ''
 
   return (
     <>
       <TemplateEngineModal />
+      <StartupUpdateModal
+        isOpen={updateModalOpen}
+        remoteBuildId={remoteBuildId}
+        currentBuildId={currentBuildId}
+        instances={instances}
+        templateUpdating={templateUpdating}
+        templateProgress={templateProgress}
+        templateError={templateError}
+        updatingInstances={updatingInstances}
+        isUpdatingBatch={isUpdatingBatch}
+        onUpdateSelected={handleUpdateSelectedInstances}
+        onClose={() => setUpdateModalOpen(false)}
+      />
       <div className="titlebar-drag" />
       <div className="app-bg" style={{ backgroundImage: `url(${bgImage})` }} />
       <div className="app-container">
-        {/* Context-Aware Sidebar */}
         <nav className="sidebar">
           {view.type === 'list' ? (
-            // --- GLOBAL CONTEXT ---
             <>
               <div className="sidebar-header">
                 <img src={iconImage} alt="PalServer Manager" className="sidebar-logo" />
@@ -72,7 +188,6 @@ function App(): React.JSX.Element {
               </div>
             </>
           ) : (
-            // --- SERVER CONTEXT ---
             <>
               <div className="sidebar-header" style={{ paddingBottom: '16px', gap: '12px' }}>
                 <button
@@ -134,6 +249,14 @@ function App(): React.JSX.Element {
                 </div>
 
                 <div
+                  className={`sidebar-item ${view.tab === 'schedules' ? 'active' : ''}`}
+                  onClick={() => setView({ ...view, tab: 'schedules' })}
+                >
+                  <IconClock />
+                  <span>Schedules</span>
+                </div>
+
+                <div
                   className={`sidebar-item ${view.tab === 'players' ? 'active' : ''}`}
                   onClick={() => setView({ ...view, tab: 'players' })}
                 >
@@ -161,7 +284,6 @@ function App(): React.JSX.Element {
           )}
         </nav>
 
-        {/* Main Content */}
         <main className="main-content">
           {view.type === 'list' ? (
             <InstanceList
@@ -173,7 +295,6 @@ function App(): React.JSX.Element {
         </main>
       </div>
 
-      {/* Global Alert Modal */}
       {globalAlert && (
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
           <div className="modal">

@@ -107,13 +107,22 @@ export class BaseRCON {
       const timer = setTimeout(() => {
         socket.removeListener('readable', onReadable)
         socket.removeListener('close', onClose)
+        socket.removeListener('error', onError)
         reject(new TimeoutError('Timeout while reading data from server'))
       }, timeoutMs)
 
       const onClose = (): void => {
         clearTimeout(timer)
         socket.removeListener('readable', onReadable)
+        socket.removeListener('error', onError)
         reject(new ClientError('Socket closed unexpectedly.'))
+      }
+
+      const onError = (err: Error): void => {
+        clearTimeout(timer)
+        socket.removeListener('readable', onReadable)
+        socket.removeListener('close', onClose)
+        reject(new ClientError(`Socket error: ${err.message}`))
       }
 
       const onReadable = (): void => {
@@ -122,12 +131,14 @@ export class BaseRCON {
           clearTimeout(timer)
           socket.removeListener('readable', onReadable)
           socket.removeListener('close', onClose)
+          socket.removeListener('error', onError)
           resolve(chunk as Buffer)
         }
       }
 
       socket.on('readable', onReadable)
       socket.once('close', onClose)
+      socket.once('error', onError)
 
       onReadable()
     })
@@ -291,16 +302,25 @@ export class EvrimaRCON {
 
       const timer = setTimeout(() => {
         socket.removeListener('data', onData)
+        socket.removeListener('error', onError)
         reject(new TimeoutError('Timeout'))
       }, timeoutMs)
+
+      const onError = (err: Error): void => {
+        clearTimeout(timer)
+        socket.removeListener('data', onData)
+        reject(new ClientError(`Socket error: ${err.message}`))
+      }
 
       const onData = (data: Buffer): void => {
         clearTimeout(timer)
         socket.removeListener('data', onData)
+        socket.removeListener('error', onError)
         resolve(data)
       }
 
       socket.once('data', onData)
+      socket.once('error', onError)
     })
   }
 }

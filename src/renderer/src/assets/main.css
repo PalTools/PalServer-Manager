@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ── Reset & Variables ────────────────────────────────────────── */
 :root {
   --bg-primary: #0e121a;
   --bg-secondary: rgba(20, 26, 35, 0.7);
@@ -30,7 +29,6 @@
   --transition: 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Cozy Theme Tokens */
   --panel-bg: linear-gradient(145deg, rgba(30, 38, 55, 0.75) 0%, rgba(22, 28, 40, 0.6) 100%);
   --panel-bg-hover: linear-gradient(145deg, rgba(38, 48, 68, 0.8) 0%, rgba(26, 32, 48, 0.6) 100%);
   --panel-border: rgba(255, 255, 255, 0.08);
@@ -64,7 +62,6 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Drag region for frameless window ─────────────────────────── */
 .titlebar-drag {
   -webkit-app-region: drag;
   height: 36px;
@@ -75,7 +72,6 @@ body,
   z-index: 9999;
 }
 
-/* ── App Layout ───────────────────────────────────────────────── */
 .app-container {
   display: flex;
   height: 100%;
@@ -96,7 +92,6 @@ body,
   filter: brightness(0.2) saturate(0.7) blur(10px);
 }
 
-/* ── Sidebar ──────────────────────────────────────────────────── */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -218,7 +213,6 @@ body,
   border-top: 1px solid var(--border);
 }
 
-/* ── Main Content ─────────────────────────────────────────────── */
 .main-content {
   flex: 1;
   display: flex;
@@ -230,7 +224,6 @@ body,
   z-index: 1;
 }
 
-/* ── Instance List (empty state) ──────────────────────────────── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -264,7 +257,6 @@ body,
   max-width: 360px;
 }
 
-/* ── Instance Cards Grid ──────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: center;
@@ -417,7 +409,6 @@ body,
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* ── Buttons ──────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -499,7 +490,6 @@ body,
   justify-content: center;
 }
 
-/* ── Dropdown / Overflow Menu ─────────────────────────────────── */
 .dropdown-container {
   position: relative;
   display: inline-block;
@@ -571,7 +561,6 @@ body,
   }
 }
 
-/* ── Search Bar ───────────────────────────────────────────────── */
 .search-input-wrapper {
   position: relative;
   flex: 1;
@@ -604,7 +593,6 @@ body,
   background: rgba(0, 0, 0, 0.4);
 }
 
-/* ── Detail Page ──────────────────────────────────────────────── */
 .detail-header {
   display: flex;
   align-items: center;
@@ -679,7 +667,6 @@ body,
   color: var(--text-muted);
 }
 
-/* ── Settings Panel ───────────────────────────────────────────── */
 .detail-panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -787,7 +774,6 @@ body,
   transform: translateX(18px);
 }
 
-/* ── Log Panel ────────────────────────────────────────────────── */
 .log-panel {
   grid-column: 1 / -1;
   display: flex;
@@ -818,7 +804,6 @@ body,
   color: var(--text-muted);
 }
 
-/* ── Modal ────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -878,7 +863,6 @@ body,
   }
 }
 
-/* ── Confirm Dialog ───────────────────────────────────────────── */
 .confirm-text {
   color: var(--text-secondary);
   font-size: 14px;
@@ -900,7 +884,6 @@ body,
   accent-color: var(--accent);
 }
 
-/* ── Scrollbar ────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -918,7 +901,6 @@ body,
   background: var(--text-muted);
 }
 
-/* ── Tab Layout & Full-Screen Terminal ────────────────────────── */
 .tab-pane {
   display: flex;
   flex-direction: column;
@@ -943,7 +925,6 @@ body,
   max-height: none;
 }
 
-/* ── Loading spinner ──────────────────────────────────────────── */
 .spinner {
   width: 16px;
   height: 16px;
@@ -958,8 +939,6 @@ body,
     transform: rotate(360deg);
   }
 }
-
-/* ── Install Screen Overlay ─────────────────────────────────────── */
 
 .install-screen {
   display: flex;
@@ -1069,7 +1048,6 @@ body,
   }
 }
 
-/* ── Form Controls ────────────────────────────────────────────── */
 .input-field {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
@@ -1088,7 +1066,6 @@ body,
   background: rgba(0, 0, 0, 0.4);
 }
 
-/* ── Context Menu ─────────────────────────────────────────────── */
 .context-menu-item {
   display: flex;
   align-items: center;
@@ -1112,7 +1089,6 @@ body,
   opacity: 0.8;
 }
 
-/* Template Engine Modal */
 .template-engine-overlay {
   position: fixed;
   top: 0;
