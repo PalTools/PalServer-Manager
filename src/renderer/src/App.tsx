@@ -22,7 +22,8 @@ import {
   IconFolder,
   IconServer,
   IconArrowLeft,
-  IconFile
+  IconFile,
+  IconClock
 } from './components/Shared/Icons'
 
 import { TemplateEngineModal } from './components/TemplateEngine/TemplateEngineModal'
@@ -245,6 +246,14 @@ function App(): React.JSX.Element {
                 >
                   <IconSettings />
                   <span>Configuration</span>
+                </div>
+
+                <div
+                  className={`sidebar-item ${view.tab === 'schedules' ? 'active' : ''}`}
+                  onClick={() => setView({ ...view, tab: 'schedules' })}
+                >
+                  <IconClock />
+                  <span>Schedules</span>
                 </div>
 
                 <div

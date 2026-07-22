@@ -42,6 +42,11 @@ interface PalServerManagerAPI {
   banPlayer: (id: string, userId: string, message: string) => Promise<void>
   unbanPlayer: (id: string, userId: string) => Promise<void>
   announce: (id: string, message: string) => Promise<void>
+
+  listSchedules: (id: string) => Promise<unknown[]>
+  saveSchedule: (id: string, schedule: unknown) => Promise<unknown>
+  deleteSchedule: (id: string, scheduleId: string) => Promise<void>
+  runScheduleNow: (id: string, scheduleId: string) => Promise<unknown>
 }
 
 declare global {

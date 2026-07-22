@@ -219,3 +219,56 @@ export async function archive(id: string, relPaths: string[], archiveName: strin
 export async function unarchive(id: string, relPath: string): Promise<void> {
   await api.unarchive(id, relPath)
 }
+
+export type TaskActionType = 'send_command' | 'power_action' | 'backup'
+
+export interface ScheduleTask {
+  id: string
+  action: TaskActionType
+  payload: string
+  delaySeconds: number
+  continueOnFailure: boolean
+}
+
+export interface ScheduleHistory {
+  id: string
+  timestamp: string
+  triggerType: 'scheduled' | 'manual'
+  status: 'success' | 'partial' | 'failed'
+  logs: string[]
+}
+
+export interface Schedule {
+  id: string
+  name: string
+  cronExpression: string
+  isActive: boolean
+  onlyWhenOnline: boolean
+  lastRunAt?: string
+  nextRunAt?: string
+  tasks: ScheduleTask[]
+  history?: ScheduleHistory[]
+}
+
+export async function listSchedules(id: string): Promise<Schedule[]> {
+  const res = await window.electron.ipcRenderer.invoke('instances:listSchedules', id)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as Schedule[]
+}
+
+export async function saveSchedule(id: string, schedule: Partial<Schedule>): Promise<Schedule> {
+  const res = await window.electron.ipcRenderer.invoke('instances:saveSchedule', id, schedule)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as Schedule
+}
+
+export async function deleteSchedule(id: string, scheduleId: string): Promise<void> {
+  const res = await window.electron.ipcRenderer.invoke('instances:deleteSchedule', id, scheduleId)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+}
+
+export async function runScheduleNow(id: string, scheduleId: string): Promise<ScheduleHistory> {
+  const res = await window.electron.ipcRenderer.invoke('instances:runScheduleNow', id, scheduleId)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+  return res as ScheduleHistory
+}
