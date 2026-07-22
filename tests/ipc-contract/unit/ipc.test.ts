@@ -2,10 +2,14 @@ import { describe, it, expect, vi } from 'vitest'
 import { registerControlHandlers } from '../../../src/main/ipcs/server/control'
 import { registerFsHandlers } from '../../../src/main/ipcs/server/fs'
 import { registerInstanceHandlers } from '../../../src/main/ipcs/server/instances'
+import { registerTemplateHandlers } from '../../../src/main/ipcs/engine/template'
 import { InstanceManager } from '../../../src/main/services/server/instanceManager'
 
 const mockHandlers = new Map<string, (...args: unknown[]) => unknown>()
 vi.mock('electron', () => ({
+  app: {
+    getPath: vi.fn(() => '/tmp/userdata')
+  },
   ipcMain: {
     handle: (channel: string, cb: (...args: unknown[]) => unknown) => {
       mockHandlers.set(channel, cb)
@@ -30,6 +34,7 @@ describe('ipc-contract - unit', () => {
     registerControlHandlers(mockManager, mockGetWindow)
     registerFsHandlers(mockManager)
     registerInstanceHandlers(mockManager, mockGetWindow)
+    registerTemplateHandlers(mockGetWindow)
 
     const startHandler = mockHandlers.get('control:start')
     expect(startHandler).toBeDefined()
@@ -67,5 +72,17 @@ describe('ipc-contract - unit', () => {
     const rconRes = (await rconHandler!({}, 'invalid', 'ShowPlayers')) as { _ipcError: string }
     expect(rconRes).toHaveProperty('_ipcError')
     expect(rconRes._ipcError).toContain('Instance not found')
+
+    const updateFilesHandler = mockHandlers.get('instances:updateFiles')
+    expect(updateFilesHandler).toBeDefined()
+    ;(mockManager.get as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
+      throw new Error('Instance not found')
+    })
+    const updateRes = (await updateFilesHandler!({}, 'invalid')) as { _ipcError: string }
+    expect(updateRes).toHaveProperty('_ipcError')
+    expect(updateRes._ipcError).toContain('Instance not found')
+
+    const templateCheckHandler = mockHandlers.get('template:checkForUpdate')
+    expect(templateCheckHandler).toBeDefined()
   })
 })

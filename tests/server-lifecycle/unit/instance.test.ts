@@ -48,6 +48,7 @@ describe('instance.ts - Lifecycle', () => {
     const inst = ServerInstance.create({ name: 'Test' }, '/tmp/test', 27015, 'id')
 
     vi.spyOn(inst, 'saveConfig').mockImplementation(() => {})
+    vi.spyOn(inst, 'updateIfNeeded').mockResolvedValue(false)
     const { killProcessTree } = await import('../../../src/main/services/system/processControl')
 
     await inst.start()
@@ -133,5 +134,40 @@ describe('instance.ts - Lifecycle', () => {
     expect(processControl.killProcessTree).toHaveBeenCalledWith(9999)
     expect(inst.state).toBe('stopped')
     expect(inst.pid).toBeUndefined()
+  })
+
+  it('start() performs auto-update when enabled and skips when disabled', async () => {
+    const inst = ServerInstance.create(
+      { name: 'Test', settings: { autoUpdate: true } },
+      '/tmp/test',
+      27015,
+      'id'
+    )
+    vi.spyOn(inst, 'saveConfig').mockImplementation(() => {})
+    const updateSpy = vi.spyOn(inst, 'updateIfNeeded').mockResolvedValue(false)
+
+    await inst.start()
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+
+    inst.settings.autoUpdate = false
+    await inst.start()
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('start() handles auto-update errors gracefully and still starts server', async () => {
+    const inst = ServerInstance.create(
+      { name: 'Test', settings: { autoUpdate: true } },
+      '/tmp/test',
+      27015,
+      'id'
+    )
+    vi.spyOn(inst, 'saveConfig').mockImplementation(() => {})
+    vi.spyOn(inst, 'updateIfNeeded').mockRejectedValue(new Error('Network failure'))
+
+    const logs: string[] = []
+    await inst.start((msg) => logs.push(msg))
+
+    expect(inst.state).toBe('running')
+    expect(logs.some((l) => l.includes('Auto-update check failed'))).toBe(true)
   })
 })

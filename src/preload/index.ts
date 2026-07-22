@@ -37,6 +37,8 @@ const palServerManager = {
 
   getTemplateStatus: () => ipcRenderer.invoke('template:getStatus'),
   installTemplate: () => ipcRenderer.invoke('template:install'),
+  checkTemplateUpdate: () => ipcRenderer.invoke('template:checkForUpdate'),
+  updateInstanceFiles: (id: string) => ipcRenderer.invoke('instances:updateFiles', id),
   onTemplateProgress: (callback: (data: { stage: string; percentage: number }) => void) => {
     const handler = (_event: unknown, data: { stage: string; percentage: number }): void =>
       callback(data)

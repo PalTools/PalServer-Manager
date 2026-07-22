@@ -8,7 +8,7 @@ import {
   mkdirSync,
   chmodSync
 } from 'fs'
-import { installOrUpdate } from './steamcmd'
+import { installOrUpdate, checkForUpdate } from './steamcmd'
 import { getDataRoot } from '../../ipcs/core/settings'
 import { isLinux, SERVER_EXE_NAME } from '../../services/core/types'
 
@@ -103,6 +103,14 @@ export class TemplateManager {
     log?.('Generating integrity manifest...')
     this.generateIntegrityManifest()
     log?.('Template integrity validated.')
+  }
+
+  async checkForUpdate(log?: (msg: string) => void): Promise<{
+    needsUpdate: boolean
+    currentBuildId: string | null
+    remoteBuildId: string | null
+  }> {
+    return checkForUpdate(this.templateDir, log)
   }
 }
 

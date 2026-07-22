@@ -68,7 +68,10 @@ export class ServerInstance {
     this.name = config.name
     this.createdAt = config.createdAt
     this.installPath = config.installPath
-    this.settings = { ...config.settings }
+    this.settings = {
+      ...config.settings,
+      autoUpdate: config.settings?.autoUpdate ?? true
+    }
     this.limits = { ...config.limits }
     this.PalworldSettings = config.PalworldSettings ? { ...config.PalworldSettings } : {}
     this.state = config.state
@@ -92,7 +95,8 @@ export class ServerInstance {
       settings: {
         publicLobby: input.settings?.publicLobby ?? true,
         queryPort,
-        restApiUsername: 'admin'
+        restApiUsername: 'admin',
+        autoUpdate: input.settings?.autoUpdate ?? true
       },
       limits: {},
       PalworldSettings: {},
@@ -332,8 +336,15 @@ export class ServerInstance {
   async updateIfNeeded(log?: (msg: string) => void): Promise<boolean> {
     const result = await checkForUpdate(this.serverDir, log)
     if (result.needsUpdate) {
-      log?.('Update detected — installing...')
-      await installOrUpdate(this.serverDir, log)
+      log?.('Update detected — installing server update...')
+      this._installProgress = { stage: 'Downloading update', percentage: 0 }
+      this.emitStatus()
+      await installOrUpdate(this.serverDir, log, (stage, percentage) => {
+        this._installProgress = { stage, percentage }
+        this.emitStatus()
+      })
+      this._installProgress = undefined
+      this.emitStatus()
       return true
     }
     log?.('No update detected.')
@@ -379,15 +390,28 @@ export class ServerInstance {
       await sleep(1000)
     }
 
+    this.state = 'starting'
+    this.saveConfig()
+    this.emitStatus()
+
+    if (this.settings.autoUpdate !== false) {
+      logFn('Checking for Palworld server updates before starting...')
+      try {
+        await this.updateIfNeeded(logFn)
+      } catch (err) {
+        logFn(
+          `Auto-update check failed: ${
+            err instanceof Error ? err.message : String(err)
+          }. Proceeding with server start.`
+        )
+      }
+    }
+
     if (!existsSync(this.targetExe)) {
       throw new Error(
         'Server executable not found. The instance might be corrupted or missing files.'
       )
     }
-
-    this.state = 'starting'
-    this.saveConfig()
-    this.emitStatus()
 
     logFn('Patching PalWorldSettings.ini with current configuration...')
     try {

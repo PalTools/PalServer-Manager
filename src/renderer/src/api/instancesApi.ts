@@ -31,6 +31,7 @@ export interface InstanceSettings {
   publicLobby: boolean
   queryPort: number
   restApiUsername: string
+  autoUpdate: boolean
 }
 
 export interface RestApiConfig {
@@ -127,6 +128,11 @@ export async function updateInstance(id: string, patch: InstancePatch): Promise<
 
 export async function deleteInstance(id: string, deleteFiles: boolean): Promise<void> {
   const res = await window.electron.ipcRenderer.invoke('instances:delete', id, deleteFiles)
+  if (res && res._ipcError) throw new Error(res._ipcError)
+}
+
+export async function updateInstanceFiles(id: string): Promise<void> {
+  const res = await window.electron.ipcRenderer.invoke('instances:updateFiles', id)
   if (res && res._ipcError) throw new Error(res._ipcError)
 }
 

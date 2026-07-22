@@ -28,4 +28,20 @@ export function registerTemplateHandlers(getMainWindow: () => BrowserWindow | nu
       return { success: false, error: e instanceof Error ? e.message : String(e) }
     }
   })
+
+  ipcMain.handle('template:checkForUpdate', async () => {
+    const log = (msg: string): void => {
+      console.log(`[TemplateEngine Check] ${msg}`)
+    }
+    try {
+      return await templateManager.checkForUpdate(log)
+    } catch (e: unknown) {
+      return {
+        needsUpdate: false,
+        currentBuildId: null,
+        remoteBuildId: null,
+        error: e instanceof Error ? e.message : String(e)
+      }
+    }
+  })
 }

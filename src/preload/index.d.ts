@@ -27,6 +27,16 @@ interface PalServerManagerAPI {
   onInstanceStatus: (callback: (status: unknown) => void) => () => void
   onInstanceLog: (callback: (id: string, msg: string) => void) => () => void
 
+  getTemplateStatus: () => Promise<unknown>
+  installTemplate: () => Promise<{ success: boolean; error?: string }>
+  checkTemplateUpdate: () => Promise<{
+    needsUpdate: boolean
+    currentBuildId: string | null
+    remoteBuildId: string | null
+    error?: string
+  }>
+  updateInstanceFiles: (id: string) => Promise<unknown>
+
   getPlayers: (id: string) => Promise<unknown[]>
   kickPlayer: (id: string, userId: string, message: string) => Promise<void>
   banPlayer: (id: string, userId: string, message: string) => Promise<void>
