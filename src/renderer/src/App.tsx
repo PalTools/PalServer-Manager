@@ -50,10 +50,8 @@ function App(): React.JSX.Element {
       <div className="titlebar-drag" />
       <div className="app-bg" style={{ backgroundImage: `url(${bgImage})` }} />
       <div className="app-container">
-        {/* Context-Aware Sidebar */}
         <nav className="sidebar">
           {view.type === 'list' ? (
-            // --- GLOBAL CONTEXT ---
             <>
               <div className="sidebar-header">
                 <img src={iconImage} alt="PalServer Manager" className="sidebar-logo" />
@@ -72,7 +70,6 @@ function App(): React.JSX.Element {
               </div>
             </>
           ) : (
-            // --- SERVER CONTEXT ---
             <>
               <div className="sidebar-header" style={{ paddingBottom: '16px', gap: '12px' }}>
                 <button
@@ -161,7 +158,6 @@ function App(): React.JSX.Element {
           )}
         </nav>
 
-        {/* Main Content */}
         <main className="main-content">
           {view.type === 'list' ? (
             <InstanceList
@@ -173,7 +169,6 @@ function App(): React.JSX.Element {
         </main>
       </div>
 
-      {/* Global Alert Modal */}
       {globalAlert && (
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
           <div className="modal">

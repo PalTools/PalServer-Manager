@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Format, lint, and type check
+    name: Format, lint, type check, and test
     runs-on: windows-latest
     steps:
       - name: Check out repository
@@ -37,10 +37,44 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Test
+        run: npm run test:all
+
+  check-release-version:
+    name: Check release version is not already published
+    if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
+    runs-on: windows-latest
+    needs: quality
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Get version from package.json
+        id: get-version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if this version's Stable tag already exists
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.get-version.outputs.version }}"
+          if gh release view "$tag" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists. Bump the version in package.json before pushing to ${{ github.event.repository.default_branch }}."
+            exit 1
+          fi
+
   build-windows:
     name: Build Windows installer
     runs-on: windows-latest
-    needs: quality
+    needs: check-release-version
+    if: github.event_name == 'push' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.ref == 'refs/heads/dev')
     permissions:
       contents: write
     steps:
@@ -59,31 +93,26 @@ jobs:
       - name: Build Windows installer
         run: npm run build:win
 
-      - name: Get version from package.json
-        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        shell: bash
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-
       - name: Publish Stable Release
-        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ env.version }}
-          name: PalServer-Manager v${{ env.version }}
+          tag: v${{ needs.check-release-version.outputs.version }}
+          name: PalServer-Manager v${{ needs.check-release-version.outputs.version }}
           body: |
-            ## 🎉 Stable Release: v${{ env.version }}
+            ## 🎉 Stable Release: v${{ needs.check-release-version.outputs.version }}
 
             This is the official stable release for PalServer-Manager.
 
             **Commit:** `${{ github.sha }}`
           makeLatest: true
-          allowUpdates: true
+          allowUpdates: false
           replacesArtifacts: true
           artifactErrorsFailBuild: true
           artifacts: dist/*-setup.exe
 
       - name: Publish Experimental Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        if: github.ref == 'refs/heads/dev'
         uses: ncipollo/release-action@v1
         with:
           tag: experimental

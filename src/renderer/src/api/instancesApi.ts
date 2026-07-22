@@ -1,7 +1,3 @@
-/**
- * api/instancesApi.ts — Typed wrapper over the preload-exposed IPC calls.
- */
-
 export interface PalworldSettingSchema {
   key: string
   displayName?: string
@@ -177,8 +173,6 @@ export function onInstanceStatus(callback: (status: InstanceStatus) => void): ()
 export function onInstanceLog(callback: (id: string, msg: string) => void): () => void {
   return api.onInstanceLog(callback)
 }
-
-// ── File System ─────────────────────────────────────────────────
 
 export async function listDir(id: string, relPath: string): Promise<FileEntry[]> {
   return (await api.listDir(id, relPath)) as FileEntry[]

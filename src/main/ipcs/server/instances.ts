@@ -1,7 +1,3 @@
-/**
- * ipc/instances.ts — IPC handlers for instance CRUD operations.
- */
-
 import { ipcMain, shell, BrowserWindow } from 'electron'
 import { InstanceManager } from '../../services/server/instanceManager'
 import { PALWORLD_SCHEMA } from '../../services/server/palworldSchema'

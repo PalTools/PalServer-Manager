@@ -1,10 +1,3 @@
-/**
- * backend/processControl.ts — Windows process lookup, kill, memory.
- *
- * Fully asynchronous, uses native commands (tasklist/taskkill) instead of
- * PowerShell/WMI to avoid freezing the Electron main thread.
- */
-
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { basename } from 'path'
@@ -12,23 +5,16 @@ import { isLinux } from '../core/types'
 
 const execAsync = promisify(exec)
 
-/**
- * Fast synchronous liveness check using Node's process.kill(pid, 0).
- */
 export function isProcessAlive(pid: number | null | undefined): boolean {
   if (!pid || pid <= 0) return false
   try {
     process.kill(pid, 0)
     return true
   } catch (e: unknown) {
-    return (e as NodeJS.ErrnoException).code === 'EPERM' // EPERM means it exists but we don't own it. ESRCH means it's dead.
+    return (e as NodeJS.ErrnoException).code === 'EPERM'
   }
 }
 
-/**
- * Ensures the PID belongs to the expected executable name to prevent
- * PID reuse collisions (e.g. if the server crashed and another app took PID).
- */
 export async function verifyPid(pid: number, exePath: string): Promise<boolean> {
   if (!isProcessAlive(pid)) return false
   const baseName = basename(exePath).toLowerCase()
@@ -60,19 +46,15 @@ export async function killProcessTree(pid: number | null | undefined): Promise<v
   if (!pid || !isProcessAlive(pid)) return
   try {
     if (isLinux) {
-      // Kill the entire process group to ensure SteamCMD and PalServer children are cleaned up
       process.kill(-pid, 'SIGKILL')
     } else {
       await execAsync(`taskkill /F /PID ${pid} /T`, { timeout: 5000 })
     }
   } catch {
-    // Process may have already exited
+    void 0
   }
 }
 
-/**
- * Get formatted memory usage for the process using tasklist. Returns e.g. "1.23 GB" or "456 MB".
- */
 export async function getMemoryUsage(pid: number | null | undefined): Promise<string> {
   if (!pid || !isProcessAlive(pid)) return 'N/A'
   try {
@@ -104,14 +86,8 @@ export async function getMemoryUsage(pid: number | null | undefined): Promise<st
   }
 }
 
-/**
- * State map to track previous CPU time for calculating percentages on Windows
- */
 const cpuState = new Map<number, { lastCpuSec: number; lastTimeMs: number }>()
 
-/**
- * Get comprehensive CPU and Memory usage without wmic (broken on Win11).
- */
 export async function getProcessUsage(
   pid: number | null | undefined
 ): Promise<{ cpu: string; memory: string } | null> {
@@ -132,7 +108,6 @@ export async function getProcessUsage(
         return { cpu: `${Math.round(cpuPercent)}%`, memory: memoryStr }
       }
     } else {
-      // Windows: Get-Process provides WorkingSet64 (bytes) and CPU (total CPU time in seconds)
       const { stdout } = await execAsync(
         `powershell -NoProfile -NonInteractive -Command "Get-Process -Id ${pid} | Select-Object WorkingSet64, CPU | ConvertTo-Json"`,
         { timeout: 5000 }
@@ -160,15 +135,11 @@ export async function getProcessUsage(
       return { cpu: `${Math.round(cpuPercent)}%`, memory: memoryStr }
     }
   } catch {
-    // ignore
+    void 0
   }
   return null
 }
 
-/**
- * Find the process ID of the server by searching WMI for the exact path.
- * Used only as a fallback if the app restarts and loses the cached PID.
- */
 export async function findProcessIdByPath(
   exePath: string,
   instanceDir: string
@@ -180,7 +151,6 @@ export async function findProcessIdByPath(
 
   try {
     if (isLinux) {
-      // Find matching processes and look at their working directory or command line
       const { stdout } = await execAsync(`pgrep -f "${baseName}"`, { timeout: 5000 })
       const lines = stdout.split('\n')
       for (const line of lines) {

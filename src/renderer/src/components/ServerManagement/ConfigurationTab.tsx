@@ -175,12 +175,10 @@ export default function ConfigurationTab({
 }: Props): React.JSX.Element {
   const [schema, setSchema] = useState<PalworldSettingSchema[]>([])
 
-  // Manager specific states
   const [formName, setFormName] = useState(config.name)
   const [formQueryPort, setFormQueryPort] = useState(String(config.settings.queryPort))
   const [formPublicLobby, setFormPublicLobby] = useState(config.settings.publicLobby)
 
-  // Dynamic game settings state
   const [PalworldSettings, setPalworldSettings] = useState<
     Record<string, string | number | boolean>
   >(config.PalworldSettings || {})
@@ -188,7 +186,6 @@ export default function ConfigurationTab({
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('All')
 
-  // File Editor state
   const [editorMode, setEditorMode] = useState<'list' | 'form' | 'file'>('list')
   const [selectedFile, setSelectedFile] = useState<string>(
     'Pal/Saved/Config/WindowsServer/PalWorldSettings.ini'
@@ -461,7 +458,6 @@ export default function ConfigurationTab({
 
         {editorMode === 'form' && (
           <>
-            {/* Top Search Bar */}
             <div style={{ marginBottom: '24px' }}>
               <input
                 className="form-input"
@@ -472,7 +468,6 @@ export default function ConfigurationTab({
               />
             </div>
 
-            {/* Categories Navigation Tabs */}
             <div
               style={{
                 display: 'flex',
@@ -522,7 +517,6 @@ export default function ConfigurationTab({
               </div>
             )}
 
-            {/* Main Settings Grid */}
             <div
               style={{
                 flex: 1,

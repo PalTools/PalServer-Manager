@@ -24,7 +24,6 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
   const [searchQuery, setSearchQuery] = useState('')
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
-  // Create form state
   const [newName, setNewName] = useState('Palworld Server Hosted By PalTools/PalServer-Manager')
   const [newPublicPort, setNewPublicPort] = useState('')
   const [newQueryPort, setNewQueryPort] = useState('')
@@ -55,7 +54,6 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
     refresh()
   }, [refresh])
 
-  // Subscribe to live status updates
   useEffect(() => {
     const unsub = onInstanceStatus((status: InstanceStatus) => {
       setStatuses((prev) => {
@@ -63,7 +61,6 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
         next.set(status.id, status)
         return next
       })
-      // Also update instance state in the list
       setInstances((prev) =>
         prev.map((inst) => (inst.id === status.id ? { ...inst, state: status.state } : inst))
       )
@@ -431,7 +428,6 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
                   border: '1px solid var(--border)'
                 }}
               >
-                {/* IP & Ports inline */}
                 <div
                   style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}
                 >
@@ -462,7 +458,6 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
 
                 <div style={{ height: '1px', background: 'var(--border)', opacity: 0.5 }} />
 
-                {/* Dense Grid for Stats */}
                 <div
                   style={{
                     display: 'grid',

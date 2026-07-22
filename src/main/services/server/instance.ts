@@ -1,10 +1,3 @@
-/**
- * backend/instance.ts — ServerInstance class.
- *
- * Each ServerInstance owns its own config, ports, child process handle, and
- * REST API credentials. No module-level mutable state.
- */
-
 import {
   existsSync,
   readFileSync,
@@ -55,7 +48,6 @@ export class ServerInstance {
   info?: InstanceInfo
   pid?: number
 
-  // Runtime (not persisted)
   private _childProcess: ChildProcess | null = null
   private _startTime: number | null = null
   private _lastRestartTime: number | null = null
@@ -86,7 +78,6 @@ export class ServerInstance {
     this.playerDb = new PlayerDatabase(this.installPath)
   }
 
-  /** Create a new ServerInstance with defaults. */
   static create(
     input: CreateInstanceInput,
     installPath: string,
@@ -108,21 +99,18 @@ export class ServerInstance {
       state: 'stopped'
     }
 
-    // Populate default game settings from schema
     for (const schema of PALWORLD_SCHEMA) {
       if (!schema.hideInUI) {
         config.PalworldSettings[schema.key] = schema.defaultValue
       }
     }
 
-    // Merge user-provided game settings
     if (input.PalworldSettings) {
       for (const [key, value] of Object.entries(input.PalworldSettings)) {
         config.PalworldSettings[key] = value
       }
     }
 
-    // Merge additional settings
     if (input.settings) {
       config.settings = { ...config.settings, ...input.settings }
     }
@@ -130,18 +118,15 @@ export class ServerInstance {
     return new ServerInstance(config)
   }
 
-  /** Load an instance from its instance.json file. */
   static load(instanceJsonPath: string): ServerInstance | null {
     try {
       const raw = readFileSync(instanceJsonPath, 'utf-8')
       const config: InstanceConfig = JSON.parse(raw)
 
-      // Ensure all default game settings are present
       if (!config.PalworldSettings) config.PalworldSettings = {}
 
       let changed = false
 
-      // Migrate legacy 'ports' config
       const anyConfig = config as unknown as Record<string, unknown>
       if (anyConfig.ports) {
         if (!config.settings) config.settings = {} as InstanceSettings
@@ -157,7 +142,6 @@ export class ServerInstance {
         changed = true
       }
 
-      // Migrate legacy 'gameSettings' config
       if (anyConfig.gameSettings) {
         config.PalworldSettings = {
           ...(anyConfig.gameSettings as Record<string, string>),
@@ -186,8 +170,6 @@ export class ServerInstance {
       return null
     }
   }
-
-  // ── Paths ──────────────────────────────────────────────────────
 
   get serverDir(): string {
     return this.installPath
@@ -227,13 +209,10 @@ export class ServerInstance {
     return join(this.installPath, 'instance.json')
   }
 
-  // ── Persistence ────────────────────────────────────────────────
-
   saveConfig(): void {
     try {
       mkdirSync(this.installPath, { recursive: true })
       writeFileSync(this.instanceJsonPath, JSON.stringify(this.toConfig(), null, 2), 'utf-8')
-      // Only sync INI when the server is actually installed (config dir exists)
       if (existsSync(this.targetExe)) {
         this.syncIniSettings()
       }
@@ -244,13 +223,11 @@ export class ServerInstance {
 
   private getOrderedPalworldSettings(): Record<string, string | number | boolean> {
     const ordered: Record<string, string | number | boolean> = {}
-    // Enforce sequence from schema
     for (const schema of PALWORLD_SCHEMA) {
       if (this.PalworldSettings[schema.key] !== undefined) {
         ordered[schema.key] = this.PalworldSettings[schema.key]
       }
     }
-    // Include any custom keys not in schema
     for (const [k, v] of Object.entries(this.PalworldSettings)) {
       if (ordered[k] === undefined) ordered[k] = v
     }
@@ -301,7 +278,6 @@ export class ServerInstance {
     try {
       let targetDir = this.savedDir
       if (this.info?.worldGuid) {
-        // Look inside Pal/Saved/SaveGames/0/<GUID>
         const specificWorldDir = join(
           this.savedDir,
           'SaveGames',
@@ -318,7 +294,6 @@ export class ServerInstance {
       const getDirSize = (dir: string): void => {
         const files = readdirSync(dir)
         for (const file of files) {
-          // Skip backup folders so they don't inflate the save size
           if (file.toLowerCase() === 'backup' || file.toLowerCase() === 'backups') continue
 
           const filePath = join(dir, file)
@@ -337,8 +312,6 @@ export class ServerInstance {
       return 'Unknown'
     }
   }
-
-  // ── SteamCMD operations ────────────────────────────────────────
 
   async install(log?: (msg: string) => void): Promise<void> {
     this.state = 'installing'
@@ -366,8 +339,6 @@ export class ServerInstance {
     log?.('No update detected.')
     return false
   }
-
-  // ── Process lifecycle ──────────────────────────────────────────
 
   setLogFn(fn: (msg: string) => void): void {
     this._log = fn
@@ -403,13 +374,11 @@ export class ServerInstance {
     const logFn = log || this._log || (() => {})
     this._manualStop = false
 
-    // Kill any existing process for this instance
     if (this.isRunning()) {
       await killProcessTree(this.pid)
       await sleep(1000)
     }
 
-    // Ensure installed
     if (!existsSync(this.targetExe)) {
       throw new Error(
         'Server executable not found. The instance might be corrupted or missing files.'
@@ -454,12 +423,8 @@ export class ServerInstance {
     mkdirSync(logsDir, { recursive: true })
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const logFile = join(logsDir, `Server_${timestamp}.log`)
-    writeFileSync(logFile, '') // initialize log file
-
     const outFd = openSync(logFile, 'a')
 
-    // Spawn server process directly, piping stdout/stderr directly into the file descriptor
-    // This avoids anonymous pipe block-buffering from Unreal Engine
     this._childProcess = spawn(this.targetExe, args, {
       cwd: this.installPath,
       stdio: ['ignore', outFd, outFd],
@@ -490,7 +455,6 @@ export class ServerInstance {
               tailBuffer = tailBuffer.substring(nlIndex + 1)
               let str = line.trim()
               if (str) {
-                // Strip the duplicate timestamp generated by PalServer
                 str = str.replace(
                   /^\[\d{4}[-.]\d{2}[-.]\d{2}[-\s]\d{2}[:.]\d{2}[:.]\d{2}(:\d+)?\](\[\s*\d+\])?\s*/,
                   ''
@@ -687,17 +651,12 @@ export class ServerInstance {
     logFn('Server killed.')
   }
 
-  /**
-   * Called during initialization or by the monitor to verify if the cached PID
-   * really still belongs to this server. Recovers PID if lost.
-   */
   async verifyAndRecoverPid(): Promise<boolean> {
     if (this.pid) {
       const valid = await verifyPid(this.pid, this.targetExe)
       if (valid) return true
     }
 
-    // PID lost or invalid. Attempt to recover it by path scanning.
     const recovered = await findProcessIdByPath(this.targetExe, this.installPath)
     if (recovered) {
       this.pid = recovered
@@ -712,8 +671,6 @@ export class ServerInstance {
   isRunning(): boolean {
     return isProcessAlive(this.pid)
   }
-
-  // ── REST API ───────────────────────────────────────────────────
 
   public getApi(): PalworldApi | null {
     const enabled =
@@ -795,8 +752,6 @@ export class ServerInstance {
     this.playerDb.setPlayerStatus(userId, 'offline')
   }
 
-  // ── Helpers ────────────────────────────────────────────────────
-
   getSaveFilePath(): string | null {
     const dedicatedName = getDedicatedName(this.gameUserSettingsFile)
     if (!dedicatedName) return null
@@ -823,8 +778,6 @@ export class ServerInstance {
     this._lastStatusEmit = now
     this._onStatusUpdate?.(this.toStatus())
   }
-
-  // ── INI Configuration ───────────────────────────────────────────
 
   get settingsIniPath(): string {
     return join(
@@ -890,7 +843,6 @@ export class ServerInstance {
       }
     }
 
-    // Ensure multiplay is true for servers
     updates.bIsMultiplay = 'True'
 
     setSettingValues(this.settingsIniPath, updates)

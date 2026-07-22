@@ -1,17 +1,11 @@
-/**
- * ipc/control.ts — IPC handlers for start/stop/backup and log/status streaming.
- */
-
 import { ipcMain, BrowserWindow } from 'electron'
 import { InstanceManager } from '../../services/server/instanceManager'
 import { InstanceConfig } from '../../services/core/types'
 import { startMonitor } from '../../services/system/monitor'
 import { trimRamUsage } from '../../services/system/processControl'
 
-// Track active monitors so we can stop them
 const activeMonitors = new Map<string, { stop: () => void }>()
 
-// Track log messages per instance for the renderer
 const instanceLogs = new Map<string, string[]>()
 
 export function getLogFn(id: string, win: BrowserWindow | null): (msg: string) => void {
@@ -24,17 +18,15 @@ export function getLogFn(id: string, win: BrowserWindow | null): (msg: string) =
     const timestamp = `[${h}:${m}:${s}${ampm}]`
     const fullMsg = `${timestamp} ${msg}`
 
-    // Store log
     if (!instanceLogs.has(id)) instanceLogs.set(id, [])
     const logs = instanceLogs.get(id)!
     logs.push(fullMsg)
     if (logs.length > 500) logs.splice(0, logs.length - 500)
 
-    // Push to renderer
     try {
       win?.webContents.send('instance:log', id, fullMsg)
     } catch {
-      // Window may be closed
+      void 0
     }
   }
 }
@@ -53,16 +45,14 @@ export async function startInstanceProcess(
     try {
       win?.webContents.send('instance:status', status)
     } catch {
-      // Window may be closed
+      void 0
     }
   }
 
   instance.setOnStatusUpdate(emitStatus)
 
-  // Start the server
   await instance.start(logFn)
 
-  // Start monitor if not already running
   if (activeMonitors.has(id)) {
     activeMonitors.get(id)!.stop()
   }
@@ -86,7 +76,6 @@ export function registerControlHandlers(
     const win = getMainWindow()
     const logFn = getLogFn(id, win)
 
-    // Stop monitor
     if (activeMonitors.has(id)) {
       activeMonitors.get(id)!.stop()
       activeMonitors.delete(id)
@@ -125,7 +114,6 @@ export function registerControlHandlers(
   })
 }
 
-/** Stop all monitors. Called on app quit. */
 export function stopAllMonitors(): void {
   for (const [, monitor] of activeMonitors) {
     monitor.stop()

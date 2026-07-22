@@ -1,10 +1,3 @@
-/**
- * backend/monitor.ts — Per-instance monitor loop.
- *
- * One monitor per running instance: crash detection, scheduled restart,
- * stale-save reboot, periodic backup/update/RAM trim, live status push.
- */
-
 import { ServerInstance } from '../server/instance'
 import { getProcessUsage } from './processControl'
 import { InstanceStatus } from '../core/types'
@@ -13,10 +6,6 @@ interface MonitorHandle {
   stop: () => void
 }
 
-/**
- * Start a monitor loop for a given instance.
- * Returns a handle with a `stop()` method to tear it down.
- */
 export function startMonitor(
   instance: ServerInstance,
   onUpdate: (status: InstanceStatus) => void,
@@ -43,15 +32,12 @@ export function startMonitor(
     }
     wasRunning = true
 
-    // Verify PID ownership if needed (will attempt recovery if process id was lost but server is running)
     if (!instance.pid) {
       await instance.verifyAndRecoverPid()
     }
 
-    // Get metrics from REST API
     const metrics = await instance.getMetrics()
 
-    // Fetch info every 60 seconds
     if (!instance.info || now - lastInfoCheckTime >= 60) {
       lastInfoCheckTime = now
       const info = await instance.getServerInfo()
@@ -65,7 +51,6 @@ export function startMonitor(
       }
     }
 
-    // Fetch players every 5 seconds for the persistent player database
     if (now - lastPlayersCheckTime >= 5) {
       lastPlayersCheckTime = now
       const api = instance.getApi()
@@ -75,13 +60,12 @@ export function startMonitor(
           if (playersRes && playersRes.players) {
             instance.playerDb.updateActivePlayers(playersRes.players)
           } else if (Array.isArray(playersRes)) {
-            // In case the API returns just the array directly instead of { players: [] }
             instance.playerDb.updateActivePlayers(playersRes)
           }
         } catch (err: unknown) {
           const e = err as { cause?: { code?: string }; code?: string }
           if (e?.cause?.code === 'ECONNREFUSED' || e?.code === 'ECONNREFUSED') {
-            // Silently ignore ECONNREFUSED while the server is still booting its REST API
+            void 0
           } else {
             console.error(`[Monitor] Failed to fetch players for ${instance.id}:`, err)
           }
@@ -111,14 +95,12 @@ export function startMonitor(
         status.uptime = `${h}h ${m}m ${s}s`
       }
     } else {
-      // If REST is not ready, calculate basic uptime based on process alive time
       if (bootStartTime) {
         const aliveSec = Math.floor(now - bootStartTime)
         status.uptime = `${Math.floor(aliveSec / 3600)}h ${Math.floor((aliveSec % 3600) / 60)}m`
       }
     }
 
-    // Stagger resource checks to every ~6 seconds to save CPU overhead
     if (now - lastMemoryCheckTime >= 6) {
       lastMemoryCheckTime = now
       const usage = await getProcessUsage(instance.pid)
@@ -134,7 +116,6 @@ export function startMonitor(
     status.cpu = cachedCpu
 
     if (!instance.info) {
-      // Server process is running but API not ready yet
       status.state = 'running'
       instance.state = 'running'
       onUpdate(status)
@@ -153,12 +134,8 @@ export function startMonitor(
 
     onUpdate(status)
 
-    // ── Periodic checks (every 60s) ─────────────────
     if (now - lastCheckTime >= 60) {
       lastCheckTime = now
-
-      // Periodic RAM trimming is removed to prevent page-fault thrashing CPU spikes.
-      // trimRamUsage(instance.pid)
     }
   }
 
@@ -191,8 +168,6 @@ export function startMonitor(
     isTicking = true
 
     try {
-      // If we don't have a PID cached at all, we might be recovering from an app restart.
-      // Try to recover it.
       if (!instance.pid && instance.state === 'running') {
         await instance.verifyAndRecoverPid()
       }
@@ -210,14 +185,12 @@ export function startMonitor(
     }
   }
 
-  // Run tick every 3 seconds (less aggressive than 1s from reference, saves CPU)
   const intervalId = setInterval(() => {
     tick().catch((err) => {
       log(`Monitor error: ${err}`)
     })
   }, 3000)
 
-  // Run first tick immediately
   tick().catch(console.error)
 
   return {

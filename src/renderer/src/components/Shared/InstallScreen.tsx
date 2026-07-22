@@ -8,14 +8,12 @@ export default function InstallScreen({ progress }: Props): React.JSX.Element {
   const percentage = progress?.percentage || 0
   const stage = progress?.stage || 'preparing'
 
-  // Format stage to be more human readable
   const formatStage = (s: string): string => {
     const lower = s.toLowerCase()
     if (lower === 'downloading') return 'Downloading Dedicated Server Files...'
     if (lower === 'verifying') return 'Verifying Installation...'
     if (lower === 'preallocating') return 'Preallocating Space...'
 
-    // SteamCMD custom stages
     if (lower.startsWith('steamcmd downloading')) return 'Downloading SteamCMD Engine...'
     if (lower.startsWith('steamcmd extracting')) return 'Extracting SteamCMD...'
     if (lower.includes('steamcmd') && lower.includes('update')) return 'Updating SteamCMD Engine...'

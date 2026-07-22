@@ -50,12 +50,10 @@ describe('instance.ts - Lifecycle', () => {
     vi.spyOn(inst, 'saveConfig').mockImplementation(() => {})
     const { killProcessTree } = await import('../../../src/main/services/system/processControl')
 
-    // Should start normally
     await inst.start()
     expect(inst.state).toBe('running')
     expect(inst.pid).toBe(9999)
 
-    // Try to start again - should call killProcessTree
     vi.spyOn(inst, 'isRunning').mockReturnValue(true)
     await inst.start()
     expect(killProcessTree).toHaveBeenCalledWith(9999)
@@ -67,14 +65,13 @@ describe('instance.ts - Lifecycle', () => {
     inst.state = 'running'
     inst.pid = 9999
 
-    // Enable RCON in settings
     inst.PalworldSettings = {
       RCONEnabled: 'True',
       AdminPassword: 'pass'
     }
 
     vi.spyOn(inst, 'saveConfig').mockImplementation(() => {})
-    vi.spyOn(inst, 'isRunning').mockReturnValue(true) // Always pretend it's still running
+    vi.spyOn(inst, 'isRunning').mockReturnValue(true)
 
     const callOrder: string[] = []
 
@@ -101,16 +98,12 @@ describe('instance.ts - Lifecycle', () => {
 
     const stopPromise = inst.stop()
 
-    // Immediate state should be stopping
     expect(inst.state).toBe('stopping')
 
-    // Advance time by 40s (SHUTDOWN_GRACE_PERIOD_SEC)
     await vi.advanceTimersByTimeAsync(40000)
 
-    // State should STILL be stopping
     expect(inst.state).toBe('stopping')
 
-    // Advance time by another 10s (DO_EXIT_GRACE_PERIOD_SEC)
     await vi.advanceTimersByTimeAsync(10000)
 
     await stopPromise

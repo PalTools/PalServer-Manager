@@ -19,12 +19,10 @@ describe('file-manager - unit', () => {
   it('path traversal protection with hostile input', () => {
     const installPath = 'C:\\PalServer\\Instance'
 
-    // Valid path
     expect(resolveSafePath(installPath, 'Config/PalWorldSettings.ini')).toBe(
       resolve(installPath, 'Config/PalWorldSettings.ini')
     )
 
-    // Hostile inputs
     expect(() => resolveSafePath(installPath, '../../etc/passwd')).toThrow(
       'Path traversal detected'
     )

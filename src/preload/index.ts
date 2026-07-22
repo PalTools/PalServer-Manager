@@ -1,12 +1,7 @@
-/**
- * Preload script — exposes typed IPC API to the renderer via contextBridge.
- */
-
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const palServerManager = {
-  // Instance CRUD
   listInstances: () => ipcRenderer.invoke('instances:list'),
   getInstance: (id: string) => ipcRenderer.invoke('instances:get', id),
   createInstance: (input: unknown) => ipcRenderer.invoke('instances:create', input),
@@ -16,7 +11,6 @@ const palServerManager = {
   getSettingsSchema: () => ipcRenderer.invoke('instances:getSettingsSchema'),
   openFolder: (path: string) => ipcRenderer.invoke('system:openFolder', path),
 
-  // Control
   startInstance: (id: string) => ipcRenderer.invoke('control:start', id),
   stopInstance: (id: string) => ipcRenderer.invoke('control:stop', id),
   killInstance: (id: string) => ipcRenderer.invoke('control:kill', id),
@@ -41,7 +35,6 @@ const palServerManager = {
   openInExplorer: (id: string, relPath: string) =>
     ipcRenderer.invoke('fs:openInExplorer', id, relPath),
 
-  // Template Engine
   getTemplateStatus: () => ipcRenderer.invoke('template:getStatus'),
   installTemplate: () => ipcRenderer.invoke('template:install'),
   onTemplateProgress: (callback: (data: { stage: string; percentage: number }) => void) => {
@@ -51,7 +44,6 @@ const palServerManager = {
     return () => ipcRenderer.removeListener('template:progress', handler)
   },
 
-  // Players
   getPlayers: (id: string) => ipcRenderer.invoke('players:list', id),
   kickPlayer: (id: string, userId: string, message: string) =>
     ipcRenderer.invoke('players:kick', id, userId, message),
@@ -60,7 +52,6 @@ const palServerManager = {
   unbanPlayer: (id: string, userId: string) => ipcRenderer.invoke('players:unban', id, userId),
   announce: (id: string, message: string) => ipcRenderer.invoke('players:announce', id, message),
 
-  // Push subscriptions
   onInstanceStatus: (callback: (status: unknown) => void) => {
     const handler = (_event: unknown, status: unknown): void => callback(status)
     ipcRenderer.on('instance:status', handler)

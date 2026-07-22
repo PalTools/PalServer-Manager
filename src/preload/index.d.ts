@@ -27,7 +27,6 @@ interface PalServerManagerAPI {
   onInstanceStatus: (callback: (status: unknown) => void) => () => void
   onInstanceLog: (callback: (id: string, msg: string) => void) => () => void
 
-  // Players
   getPlayers: (id: string) => Promise<unknown[]>
   kickPlayer: (id: string, userId: string, message: string) => Promise<void>
   banPlayer: (id: string, userId: string, message: string) => Promise<void>

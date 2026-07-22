@@ -31,7 +31,6 @@ describe('ipc-contract - unit', () => {
     registerFsHandlers(mockManager)
     registerInstanceHandlers(mockManager, mockGetWindow)
 
-    // 1. control:start (native throw)
     const startHandler = mockHandlers.get('control:start')
     expect(startHandler).toBeDefined()
     ;(mockManager.get as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
@@ -39,7 +38,6 @@ describe('ipc-contract - unit', () => {
     })
     await expect(startHandler!({}, 'invalid')).rejects.toThrow('Instance not found')
 
-    // 2. control:stop (native throw)
     const stopHandler = mockHandlers.get('control:stop')
     expect(stopHandler).toBeDefined()
     ;(mockManager.get as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
@@ -47,7 +45,6 @@ describe('ipc-contract - unit', () => {
     })
     await expect(stopHandler!({}, 'invalid')).rejects.toThrow('Instance not found')
 
-    // 3. control:kill (native throw)
     const killHandler = mockHandlers.get('control:kill')
     expect(killHandler).toBeDefined()
     ;(mockManager.get as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
@@ -55,7 +52,6 @@ describe('ipc-contract - unit', () => {
     })
     await expect(killHandler!({}, 'invalid')).rejects.toThrow('Instance not found')
 
-    // 4. fs:writeFile (native throw)
     const writeHandler = mockHandlers.get('fs:writeFile')
     expect(writeHandler).toBeDefined()
     ;(mockManager.get as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
@@ -65,10 +61,8 @@ describe('ipc-contract - unit', () => {
       'Instance not found'
     )
 
-    // 5. instances:sendRcon (_ipcError shape wrapper)
     const rconHandler = mockHandlers.get('instances:sendRcon')
     expect(rconHandler).toBeDefined()
-    // It uses getInstance instead of get, returning undefined if not found
     ;(mockManager.getInstance as ReturnType<typeof vi.fn>).mockReturnValueOnce(undefined)
     const rconRes = (await rconHandler!({}, 'invalid', 'ShowPlayers')) as { _ipcError: string }
     expect(rconRes).toHaveProperty('_ipcError')

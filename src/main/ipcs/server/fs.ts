@@ -34,7 +34,7 @@ export function registerFsHandlers(manager: InstanceManager): void {
             size = stats.size
             mtime = stats.mtime.toISOString()
           } catch {
-            // ignore stat errors on inaccessible files
+            void 0
           }
 
           return {
@@ -46,7 +46,6 @@ export function registerFsHandlers(manager: InstanceManager): void {
         })
       )
 
-      // Sort directories first, then alphabetical
       results.sort((a, b) => {
         if (a.isDir && !b.isDir) return -1
         if (!a.isDir && b.isDir) return 1
@@ -73,9 +72,7 @@ export function registerFsHandlers(manager: InstanceManager): void {
     const instance = manager.get(id)
     const targetPath = resolveSafePath(instance.installPath, relPath)
 
-    // Use whitelist for editable files
     const allowedExts = [
-      // Config / settings
       '.ini',
       '.cfg',
       '.conf',
@@ -86,31 +83,23 @@ export function registerFsHandlers(manager: InstanceManager): void {
       '.env',
       '.properties',
       '.plist',
-
-      // Data
       '.json',
       '.jsonc',
       '.xml',
       '.csv',
       '.tsv',
-
-      // Text / docs
       '.txt',
       '.log',
       '.md',
       '.markdown',
       '.rst',
       '.adoc',
-
-      // Scripts
       '.sh',
       '.bash',
       '.zsh',
       '.bat',
       '.cmd',
       '.ps1',
-
-      // Code (plain text, editable without special tooling)
       '.js',
       '.ts',
       '.jsx',
@@ -135,8 +124,6 @@ export function registerFsHandlers(manager: InstanceManager): void {
       '.dart',
       '.kt',
       '.swift',
-
-      // Misc
       '.gitignore',
       '.editorconfig',
       '.dockerfile',
@@ -147,7 +134,6 @@ export function registerFsHandlers(manager: InstanceManager): void {
       'README'
     ]
 
-    // Check if filename exactly matches one of the full-name allowed files (like .env) or ends with extension
     const filename = targetPath.split(/[/\\]/).pop()?.toLowerCase() || ''
     const isAllowed = allowedExts.some(
       (e) => filename.endsWith(e.toLowerCase()) || filename === e.toLowerCase()
@@ -211,7 +197,6 @@ export function registerFsHandlers(manager: InstanceManager): void {
       const instance = manager.get(id)
       if (relPaths.length === 0) return
 
-      // Create archive in the directory of the first file
       const firstRelDir = dirname(relPaths[0])
       const archiveRelPath = join(firstRelDir, archiveName)
       const archivePath = resolveSafePath(instance.installPath, archiveRelPath)

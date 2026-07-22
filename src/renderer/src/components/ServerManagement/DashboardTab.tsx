@@ -30,7 +30,6 @@ export default function DashboardTab({ config, status, logs }: Props): React.JSX
         boxSizing: 'border-box'
       }}
     >
-      {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stats-card">
           <div className="stat-label">Status</div>
@@ -79,7 +78,6 @@ export default function DashboardTab({ config, status, logs }: Props): React.JSX
         </div>
       </div>
 
-      {/* Info & Logs Preview */}
       <div
         className="detail-panels"
         style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}

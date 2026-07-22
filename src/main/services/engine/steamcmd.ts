@@ -1,11 +1,3 @@
-/**
- * backend/steamcmd.ts — Shared SteamCMD wrapper with serialized access.
- *
- * Only one SteamCMD operation may run at a time system-wide. This is
- * enforced via an async promise-chain mutex — callers await their turn
- * transparently.
- */
-
 import { existsSync, createWriteStream, mkdirSync, readFileSync, unlinkSync, chmodSync } from 'fs'
 import { join } from 'path'
 import { spawn } from 'child_process'
@@ -14,29 +6,23 @@ import { get } from 'https'
 
 import { isLinux } from '../core/types'
 
-// ── Singleton state ──────────────────────────────────────────────
 let steamCmdDir = ''
 let steamCmdExe = ''
 let queueTail: Promise<void> = Promise.resolve()
 
-/** Initialize SteamCMD paths. Must be called once at app startup. */
 export function initSteamCmd(dataRoot: string): void {
   steamCmdDir = join(dataRoot, 'steamcmd')
   steamCmdExe = join(steamCmdDir, isLinux ? 'steamcmd.sh' : 'steamcmd.exe')
 }
 
-// ── Mutex ────────────────────────────────────────────────────────
-
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
-  const result = queueTail.then(fn, fn) // run even if previous failed
+  const result = queueTail.then(fn, fn)
   queueTail = result.then(
     () => {},
     () => {}
-  ) // swallow for chain
+  )
   return result
 }
-
-// ── Download & bootstrap ─────────────────────────────────────────
 
 function downloadFile(
   url: string,
@@ -46,7 +32,6 @@ function downloadFile(
   return new Promise((resolve, reject) => {
     const file = createWriteStream(dest)
     get(url, (res) => {
-      // Handle redirects
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         file.close()
         unlinkSync(dest)
@@ -92,7 +77,6 @@ function runSteamCmdRaw(
       stdoutBuf += data.toString()
 
       if (onProgress) {
-        // App update progress
         const matches = [
           ...stdoutBuf.matchAll(/Update state \([^)]+\) ([^,]+), progress: ([0-9.]+)/g)
         ]
@@ -101,7 +85,6 @@ function runSteamCmdRaw(
           onProgress(lastMatch[1], parseFloat(lastMatch[2]))
         }
 
-        // SteamCMD self-update progress (e.g. "[ 10%] Downloading update")
         const selfMatches = [...stdoutBuf.matchAll(/\[\s*([0-9.]+)%\]\s+([^(\n]+)/g)]
         if (selfMatches.length > 0) {
           const lastMatch = selfMatches[selfMatches.length - 1]
@@ -139,7 +122,6 @@ function runSteamCmdRaw(
   })
 }
 
-/** Ensure SteamCMD is downloaded, extracted, and initialized. */
 async function ensureSteamCmd(
   log?: (msg: string) => void,
   onProgress?: (stage: string, percent: number) => void
@@ -194,15 +176,11 @@ async function ensureSteamCmd(
   if (existsSync(archivePath)) unlinkSync(archivePath)
   log?.('SteamCMD installed.')
 
-  // Initialize
   log?.('SteamCMD initialization started...')
   await runSteamCmdRaw(['+login', 'anonymous', '+quit'], log, onProgress)
   log?.('SteamCMD initialization finished.')
 }
 
-// ── Public serialized operations ─────────────────────────────────
-
-/** Install or update a game into `installDir`. Serialized — safe to call concurrently. */
 export function installOrUpdate(
   installDir: string,
   log?: (msg: string) => void,
@@ -234,10 +212,6 @@ export function installOrUpdate(
   })
 }
 
-/**
- * Extract a buildid from an appmanifest or SteamCMD output file.
- * Returns the buildid string or null.
- */
 export function extractBuildId(filePath: string): string | null {
   if (!existsSync(filePath)) return null
   const content = readFileSync(filePath, 'utf-8')
@@ -279,10 +253,6 @@ async function fetchRemoteBuildId(): Promise<string> {
   return outputBuf
 }
 
-/**
- * Check if an update is available for an instance.
- * Returns { needsUpdate, currentBuildId, remoteBuildId }.
- */
 export function checkForUpdate(
   installDir: string,
   log?: (msg: string) => void
@@ -301,7 +271,6 @@ export function checkForUpdate(
 
     log?.('Checking for update...')
 
-    // Fetch build id info
     const outputBuf = await fetchRemoteBuildId()
 
     const { writeFileSync } = await import('fs')

@@ -38,7 +38,6 @@ export default function TerminalTab({ config, logs, isRunning }: Props): React.J
       console.error('RCON failed:', err)
     } finally {
       setRconLoading(false)
-      // Re-focus the input after sending (important if clicked button)
       setTimeout(() => rconInputRef.current?.focus(), 0)
     }
   }
@@ -84,7 +83,6 @@ export default function TerminalTab({ config, logs, isRunning }: Props): React.J
           )}
         </div>
 
-        {/* RCON Input Area */}
         <div
           style={{
             padding: '12px 16px',

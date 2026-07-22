@@ -37,7 +37,6 @@ export class PlayerDatabase {
         const data = JSON.parse(raw) as PersistedPlayer[]
         this.players.clear()
         for (const p of data) {
-          // Initialize missing fields for older records if any
           p.playTimeSeconds = p.playTimeSeconds || 0
           this.players.set(p.userId, p)
         }
@@ -71,7 +70,6 @@ export class PlayerDatabase {
 
       const bannedUserIds = new Set<string>()
       for (const line of lines) {
-        // Format: steam_76561198746660846,3693EF40000000000000000000000000
         const parts = line.split(',')
         if (parts.length > 0) {
           bannedUserIds.add(parts[0])
@@ -80,7 +78,6 @@ export class PlayerDatabase {
 
       let changed = false
 
-      // Mark known players as banned if they are in banlist
       this.players.forEach((p) => {
         if (bannedUserIds.has(p.userId) && p.status !== 'banned') {
           p.status = 'banned'
@@ -88,7 +85,6 @@ export class PlayerDatabase {
         }
       })
 
-      // If there are banned users in banlist that we don't know about, we could add them as dummy entries
       bannedUserIds.forEach((bId) => {
         if (!this.players.has(bId)) {
           this.players.set(bId, {
@@ -181,7 +177,7 @@ export class PlayerDatabase {
   }
 
   public getAll(): PersistedPlayer[] {
-    this.syncBanlist() // ensure bans are synced when requesting
+    this.syncBanlist()
     return Array.from(this.players.values())
   }
 

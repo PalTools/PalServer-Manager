@@ -52,19 +52,15 @@ OptionSettings=(Difficulty=None,ServerName="Default Palworld Server",ServerDescr
     writeFileSync(iniPath, raw, 'utf-8')
     const initialSettings = getAllSettings(iniPath)
 
-    // Simulate what the application does: wrap strings that the schema says require quotes
     const simulatedAppUpdates = { ...initialSettings }
     simulatedAppUpdates['ServerName'] = `"${initialSettings['ServerName']}"`
     simulatedAppUpdates['ServerDescription'] = `"${initialSettings['ServerDescription']}"`
     simulatedAppUpdates['AdminPassword'] = `"${initialSettings['AdminPassword']}"`
 
-    // Stringify back
     setSettingValues(iniPath, simulatedAppUpdates)
 
-    // Parse again
     const roundTripSettings = getAllSettings(iniPath)
 
-    // Compare
     expect(roundTripSettings).toEqual(initialSettings)
   })
 
@@ -152,7 +148,6 @@ OptionSettings=(Difficulty=None,ExpRate=1.000000,DenyTechnologyList=)
       'PalWorldSettings.ini'
     )
     mkdirSync(join(tempDir, 'Pal', 'Saved', 'Config', 'WindowsServer'), { recursive: true })
-    // Create empty file (0 bytes)
     writeFileSync(targetFilePath, '', 'utf-8')
 
     setSettingValues(targetFilePath, {

@@ -60,7 +60,6 @@ export default function InstanceDetail({ instanceId, activeTab }: Props): React.
     getLogs(instanceId).then(setLogs)
   }, [instanceId, loadConfig])
 
-  // Subscribe to status updates
   useEffect(() => {
     const unsub = onInstanceStatus((s: unknown) => {
       const st = s as InstanceStatus
@@ -72,7 +71,6 @@ export default function InstanceDetail({ instanceId, activeTab }: Props): React.
     return unsub
   }, [instanceId])
 
-  // Subscribe to log updates
   useEffect(() => {
     const unsub = onInstanceLog((id: string, msg: string) => {
       if (id === instanceId) {

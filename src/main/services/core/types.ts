@@ -1,5 +1,3 @@
-/** Shared types for PalServer-Manager backend */
-
 export interface InstanceSettings {
   publicLobby: boolean
   queryPort: number

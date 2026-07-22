@@ -13,7 +13,7 @@ export function registerTemplateHandlers(getMainWindow: () => BrowserWindow | nu
       try {
         win?.webContents.send('template:progress', { stage, percentage })
       } catch {
-        // Window might be closed
+        void 0
       }
     }
 

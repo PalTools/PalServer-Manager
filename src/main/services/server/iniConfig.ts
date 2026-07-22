@@ -1,15 +1,6 @@
-/**
- * backend/iniConfig.ts — Read/write PalWorldSettings.ini and GameUserSettings.ini
- *
- * Accepts arbitrary file paths so each instance can point at its own configs.
- */
-
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 
-/**
- * Robustly parses the comma-separated OptionSettings string, respecting quotes and parentheses.
- */
 function parseOptionString(optionString: string): Map<string, string> {
   const map = new Map<string, string>()
   let currentKey = ''
@@ -61,7 +52,6 @@ function getDefaultTemplateLines(filePath: string): string[] {
   }
 
   if (!templatePath) {
-    // Fallback to manager's default template resource
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { app } = require('electron')
@@ -74,7 +64,7 @@ function getDefaultTemplateLines(filePath: string): string[] {
         if (existsSync(p)) templatePath = p
       }
     } catch {
-      // ignore
+      void 0
     }
   }
 
@@ -170,10 +160,6 @@ export function setSettingValues(
   writeFileSync(filePath, lines.join('\n'), 'utf-8')
 }
 
-/**
- * Parse a value from PalWorldSettings.ini's OptionSettings=(...) block.
- * Mirrors the reference script's `get_setting_value`.
- */
 export function getSettingValue(filePath: string, keyword: string): string | null {
   const lines = getIniLines(filePath)
   if (lines.length === 0) return null
@@ -193,25 +179,19 @@ export function getSettingValue(filePath: string, keyword: string): string | nul
 
   if (!optionLine) return null
 
-  // Strip outer parens
   if (optionLine.startsWith('(') && optionLine.endsWith(')')) {
     optionLine = optionLine.slice(1, -1)
   }
 
-  // Parse comma-separated key=value pairs, respecting quoted strings
   const settingsMap = parseOptionString(optionLine)
   const val = settingsMap.get(keyword)
   if (val !== undefined) {
-    // Strip surrounding quotes
     return val.replace(/^["']|["']$/g, '')
   }
 
   return null
 }
 
-/**
- * Parses all values from PalWorldSettings.ini's OptionSettings=(...) block.
- */
 export function getAllSettings(filePath: string): Record<string, string> {
   const lines = getIniLines(filePath)
   if (lines.length === 0) return {}
@@ -239,17 +219,12 @@ export function getAllSettings(filePath: string): Record<string, string> {
   const result: Record<string, string> = {}
 
   for (const [k, v] of settingsMap.entries()) {
-    // Strip surrounding quotes
     result[k] = v.replace(/^["']|["']$/g, '')
   }
 
   return result
 }
 
-/**
- * Parse `DedicatedServerName` from GameUserSettings.ini.
- * Mirrors the reference script's `get_dedicated_name`.
- */
 export function getDedicatedName(filePath: string): string {
   if (!existsSync(filePath)) return ''
   const lines = readFileSync(filePath, 'utf-8').split('\n')

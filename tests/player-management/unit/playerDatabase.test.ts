@@ -42,12 +42,10 @@ describe('player-management - unit & integration', () => {
     expect(all.length).toBe(1)
     expect(all[0].status).toBe('online')
 
-    // Simulate disconnect
     db.updateActivePlayers([])
     all = db.getAll()
     expect(all[0].status).toBe('offline')
 
-    // Reconnect with new IP
     db.updateActivePlayers([
       {
         userId: '123',

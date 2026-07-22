@@ -6,7 +6,6 @@ export interface TemplateApi {
   onTemplateProgress(callback: (data: { stage: string; percentage: number }) => void): () => void
 }
 
-// Ensure type safety against preload API
 const api: TemplateApi = (window as unknown as { palServerManager: TemplateApi }).palServerManager
 
 export const getTemplateStatus = api.getTemplateStatus
