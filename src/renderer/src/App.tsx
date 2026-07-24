@@ -287,7 +287,7 @@ function App(): React.JSX.Element {
         <main className="main-content">
           {view.type === 'list' ? (
             <InstanceList
-              onSelectInstance={(id) => setView({ type: 'detail', id, tab: 'dashboard' })}
+              onSelectInstance={(id, tab) => setView({ type: 'detail', id, tab: tab || 'dashboard' })}
             />
           ) : (
             <InstanceDetail key={view.id} instanceId={view.id} activeTab={view.tab} />
