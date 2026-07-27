@@ -34,7 +34,9 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
@@ -42,6 +44,7 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@reticlehq/react": "^2.0.0",
     "@reticlehq/vite-plugin": "^2.0.0",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^22.19.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

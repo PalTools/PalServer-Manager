@@ -22,6 +22,7 @@ import FileManagerTab from '../components/ServerManagement/FileManagerTab'
 import PlayerManagementTab from '../components/ServerManagement/PlayerManagementTab'
 import ScheduleManagerTab from '../components/ServerManagement/ScheduleManagerTab'
 import LogViewerTab from '../components/ServerManagement/LogViewerTab'
+import LivemapTab from '../components/ServerManagement/LivemapTab'
 import InstallScreen from '../components/Shared/InstallScreen'
 
 interface Props {
@@ -298,6 +299,7 @@ export default function InstanceDetail({ instanceId, activeTab }: Props): React.
         )}
         {activeTab === 'files' && <FileManagerTab instanceId={instanceId} />}
         {activeTab === 'logs' && <LogViewerTab instanceId={instanceId} />}
+        {activeTab === 'livemap' && <LivemapTab instanceId={instanceId} isRunning={isRunning} />}
       </div>
 
       <ConfirmModal
