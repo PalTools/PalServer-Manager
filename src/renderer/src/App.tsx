@@ -23,7 +23,8 @@ import {
   IconServer,
   IconArrowLeft,
   IconFile,
-  IconClock
+  IconClock,
+  IconMap
 } from './components/Shared/Icons'
 
 import { TemplateEngineModal } from './components/TemplateEngine/TemplateEngineModal'
@@ -278,6 +279,14 @@ function App(): React.JSX.Element {
                 >
                   <IconFile />
                   <span>Log Viewer</span>
+                </div>
+
+                <div
+                  className={`sidebar-item ${view.tab === 'livemap' ? 'active' : ''}`}
+                  onClick={() => setView({ ...view, tab: 'livemap' })}
+                >
+                  <IconMap />
+                  <span>Livemap</span>
                 </div>
               </div>
             </>
