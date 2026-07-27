@@ -11,7 +11,7 @@ import {
 } from '../api/instancesApi'
 
 interface Props {
-  onSelectInstance: (id: string) => void
+  onSelectInstance: (id: string, tab?: string) => void
 }
 
 export default function InstanceList({ onSelectInstance }: Props): React.JSX.Element {
@@ -420,160 +420,278 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
                 style={{
                   background: 'var(--bg-glass)',
                   borderRadius: '6px',
-                  padding: '10px 12px',
+                  padding: '10px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '10px',
-                  fontSize: '12px',
                   border: '1px solid var(--border)'
                 }}
               >
                 <div
-                  style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}
                 >
-                  <span
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        color: 'var(--accent)',
+                        fontWeight: 700,
+                        background: 'rgba(255,145,0,0.1)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(255,145,0,0.2)',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {String(inst.PalworldSettings?.PublicIP || machineIp)}:
+                      {String(inst.PalworldSettings?.PublicPort || 8211)}
+                    </span>
+                    <button
+                      className="copy-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigator.clipboard.writeText(
+                          `${String(inst.PalworldSettings?.PublicIP || machineIp)}:${String(inst.PalworldSettings?.PublicPort || 8211)}`
+                        )
+                      }}
+                      title="Copy IP"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div
                     style={{
-                      fontFamily: 'monospace',
-                      fontSize: '13px',
-                      color: 'var(--text-primary)',
-                      fontWeight: 600,
-                      background: 'rgba(0,0,0,0.2)',
-                      padding: '2px 6px',
-                      borderRadius: '4px'
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '12px',
+                      fontSize: '11px',
+                      color: 'var(--text-secondary)'
                     }}
                   >
-                    {String(inst.PalworldSettings?.PublicIP || machineIp)}:
-                    {String(inst.PalworldSettings?.PublicPort || 8211)}
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    Query: {String(inst.settings?.queryPort || 27015)}
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    RCON: {String(inst.PalworldSettings?.RCONPort || 25575)}
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    REST: {String(inst.PalworldSettings?.RESTAPIPort || 8212)}
-                  </span>
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      Q: {String(inst.settings?.queryPort || 27015)}
+                    </span>
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      R: {String(inst.PalworldSettings?.RCONPort || 25575)}
+                    </span>
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      A: {String(inst.PalworldSettings?.RESTAPIPort || 8212)}
+                    </span>
+                  </div>
                 </div>
-
-                <div style={{ height: '1px', background: 'var(--border)', opacity: 0.5 }} />
 
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '6px',
-                    rowGap: '10px'
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px'
                   }}
                 >
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
-                      Players
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {isRunning ? `${status?.players || '0'}/${status?.maxPlayers || '32'}` : '—'}
-                    </span>
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </div>
+                    <div className="stat-grid-content">
+                      <span className="stat-grid-label">Players</span>
+                      <span className="stat-grid-value">
+                        {isRunning
+                          ? `${status?.players || '0'}/${status?.maxPlayers || '32'}`
+                          : '—'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
-                      {isRunning ? 'Uptime' : 'Started'}
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {isRunning ? status?.uptime || '—' : status?.lastStarted || '—'}
-                    </span>
+
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                    </div>
+                    <div className="stat-grid-content">
+                      <span className="stat-grid-label">{isRunning ? 'Uptime' : 'Started'}</span>
+                      <span className="stat-grid-value">
+                        {isRunning ? status?.uptime || '—' : status?.lastStarted || '—'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
-                      CPU / RAM
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {isRunning ? `${status?.cpu || '0%'} / ${status?.memory || '—'}` : '—'}
-                    </span>
+
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                        <rect x="9" y="9" width="6" height="6"></rect>
+                        <line x1="9" y1="1" x2="9" y2="4"></line>
+                        <line x1="15" y1="1" x2="15" y2="4"></line>
+                        <line x1="9" y1="20" x2="9" y2="23"></line>
+                        <line x1="15" y1="20" x2="15" y2="23"></line>
+                        <line x1="20" y1="9" x2="23" y2="9"></line>
+                        <line x1="20" y1="14" x2="23" y2="14"></line>
+                        <line x1="1" y1="9" x2="4" y2="9"></line>
+                        <line x1="1" y1="14" x2="4" y2="14"></line>
+                      </svg>
+                    </div>
+                    <div className="stat-grid-content">
+                      <span className="stat-grid-label">CPU/RAM</span>
+                      <span className="stat-grid-value">
+                        {isRunning ? `${status?.cpu || '0%'} / ${status?.memory || '—'}` : '—'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
-                      Save Size
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {status?.saveSize || '—'}
-                    </span>
+
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <div className="stat-grid-content">
+                      <span className="stat-grid-label">Save Size</span>
+                      <span className="stat-grid-value">{status?.saveSize || '—'}</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
-                      Version
-                    </span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {status?.version && status.version !== 'Unknown' ? status.version : '—'}
-                    </span>
+
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                    </div>
+                    <div className="stat-grid-content">
+                      <span className="stat-grid-label">Version</span>
+                      <span className="stat-grid-value">
+                        {status?.version && status.version !== 'Unknown' ? status.version : '—'}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span
-                      style={{
-                        color: 'var(--text-muted)',
-                        fontSize: '10px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}
+
+                  <div className="stat-grid-item">
+                    <div className="stat-grid-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </div>
+                    <div
+                      className="stat-grid-content"
+                      style={{ width: '100%', overflow: 'hidden' }}
                     >
-                      Admin Pass
-                    </span>
-                    <span
-                      style={{
-                        color: 'transparent',
-                        textShadow: '0 0 6px rgba(255,255,255,0.4)',
-                        transition: 'all 0.2s',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        fontWeight: 500
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.color = 'var(--text-primary)'
-                        e.currentTarget.style.textShadow = 'none'
-                        e.currentTarget.style.userSelect = 'text'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.color = 'transparent'
-                        e.currentTarget.style.textShadow = '0 0 6px rgba(255,255,255,0.4)'
-                        e.currentTarget.style.userSelect = 'none'
-                      }}
-                    >
-                      {String(inst.PalworldSettings?.AdminPassword || '(none)')}
-                    </span>
+                      <span className="stat-grid-label">Admin Pass</span>
+                      <span
+                        className="stat-grid-value"
+                        style={{
+                          color: 'transparent',
+                          textShadow: '0 0 6px rgba(255,255,255,0.4)',
+                          transition: 'all 0.2s',
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = 'var(--text-primary)'
+                          e.currentTarget.style.textShadow = 'none'
+                          e.currentTarget.style.userSelect = 'text'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = 'transparent'
+                          e.currentTarget.style.textShadow = '0 0 6px rgba(255,255,255,0.4)'
+                          e.currentTarget.style.userSelect = 'none'
+                        }}
+                      >
+                        {String(inst.PalworldSettings?.AdminPassword || '(none)')}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -691,6 +809,30 @@ export default function InstanceList({ onSelectInstance }: Props): React.JSX.Ele
 
                   {openDropdown === inst.id && (
                     <div className="dropdown-menu">
+                      <button
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setOpenDropdown(null)
+                          onSelectInstance(inst.id, 'configuration')
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        Configure Instance
+                      </button>
                       <button
                         className="dropdown-item danger"
                         disabled={isRunning || isStarting}
