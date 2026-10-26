@@ -125,6 +125,10 @@ const MapUpdater: React.FC<{ mapId: 'main' | 'tree' }> = ({ mapId }) => {
   const map = useMap()
   useEffect(() => {
     map.invalidateSize()
+    const timer = setTimeout(() => {
+      map.invalidateSize()
+    }, 100)
+
     const bounds = L.latLngBounds([0, 0], [-256, 256])
 
     // Set a good default view that is zoomed in (level 3)
@@ -133,6 +137,8 @@ const MapUpdater: React.FC<{ mapId: 'main' | 'tree' }> = ({ mapId }) => {
     // Lock the max zoom out to prevent seeing any black boxes at all
     map.setMinZoom(3)
     map.setMaxBounds(bounds)
+
+    return () => clearTimeout(timer)
   }, [mapId, map])
   return null
 }
@@ -522,7 +528,9 @@ export default function LivemapTab({ instanceId, isRunning }: Props): React.JSX.
           <ZoomTracker setMapZoom={setMapZoom} />
 
           <TileLayer
-            url={`/tiles/${activeMap}/{z}/{y}/{x}.jpg`}
+            key={activeMap}
+            url={`./tiles/${activeMap}/{z}/{y}/{x}.jpg`}
+            errorTileUrl={`./tiles/${activeMap}/blank.png`}
             noWrap={true}
             maxNativeZoom={5}
             bounds={[
